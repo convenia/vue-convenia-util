@@ -71,6 +71,8 @@ export const isCNPJ = (value) => {
     return false
   }
 
+  if (value === '00000000000000' || value.length !== 14) return false
+
   const digits = value.replace(/[\D]/gi, '')
 
   let dig1 = 0
