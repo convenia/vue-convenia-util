@@ -185,8 +185,8 @@ export const toClean = (value) => {
  * @returns {String}
  */
 export const toSlug = (value) => {
-  if (!is(value, 'String')) { // Short-circuit to handle all non-string values
-    return null               // and return null.
+  if (!is(value, 'String')) {
+    return null
   }
   const formatted = replace(normalize(value), [
     [/&/g, '-e-'],

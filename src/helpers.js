@@ -12,14 +12,19 @@ import { is } from './validators'
  * @returns {String}
  */
 export const getDateFormat = (date) => {
-  const isValid = is(date, 'String') && date.trim().length >= 10
-  const format = !isValid ? null
-    : /^\d{4}-\d{2}-\d{2}/.test(date) ? ['YYYY-MM-DD', 'YYYY-MM-DD HH:mm:ss']
-    : /^\d{2}-\d{2}-\d{4}/.test(date) ? ['DD-MM-YYYY', 'DD-MM-YYYY HH:mm:ss']
-    : /^\d{2}\/\d{2}\/\d{4}/.test(date) ? ['DD/MM/YYYY', 'DD/MM/YYYY HH:mm:ss']
-    : null
+  if (!is(date, 'String') || date.trim().length < 10) {
+    return null
+  }
 
-  return format
+  if (/^\d{4}-\d{2}-\d{2}/.test(date)) {
+    return ['YYYY-MM-DD', 'YYYY-MM-DD HH:mm:ss']
+  } else if (/^\d{2}-\d{2}-\d{4}/.test(date)) {
+    return ['DD-MM-YYYY', 'DD-MM-YYYY HH:mm:ss']
+  } else if (/^\d{2}\/\d{2}\/\d{4}/.test(date)) {
+    return ['DD/MM/YYYY', 'DD/MM/YYYY HH:mm:ss']
+  }
+
+  return null
 }
 
 /**

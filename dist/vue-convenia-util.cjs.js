@@ -19,36 +19,29 @@ var normalize__default = _interopDefault(normalize);
  * @param {String} constructor
  * @returns {Boolean}
  */
+
 var is = function (value, constructor) {
   var isEquals = constructor === getConstructor(value);
-  return isEquals
+  return isEquals;
 };
-
 var isCPF = function (cpf) {
   var isInvalid = function (cpf, rest, pos) { return rest !== parseInt(cpf.substring(pos, pos + 1)); };
 
-  var sumDigit = function (cpf, digit) { return 11 - (cpf.substring(0, digit).split('').reduce(function (acc, curr, index) {
-    acc += parseInt(curr) * ((digit + 1) - index);
-    return acc
-  }, 0) % 11); };
+  var sumDigit = function (cpf, digit) { return 11 - cpf.substring(0, digit).split('').reduce(function (acc, curr, index) {
+    acc += parseInt(curr) * (digit + 1 - index);
+    return acc;
+  }, 0) % 11; };
 
   var getRest = function (sum) { return sum > 9 ? 0 : sum; };
 
-  if (!is(cpf, 'String')) { return false }
-
+  if (!is(cpf, 'String')) { return false; }
   cpf = cpf.replace(/[\D]/gi, '');
-
-  if (!cpf.match(/^\d+$/)) { return false }
-
-  if (cpf === '00000000000' || cpf.length !== 11) { return false }
-
-  if (isInvalid(cpf, getRest(sumDigit(cpf, 9)), 9)) { return false }
-
-  if (isInvalid(cpf, getRest(sumDigit(cpf, 10)), 10)) { return false }
-
-  return true
+  if (!cpf.match(/^\d+$/)) { return false; }
+  if (cpf === '00000000000' || cpf.length !== 11) { return false; }
+  if (isInvalid(cpf, getRest(sumDigit(cpf, 9)), 9)) { return false; }
+  if (isInvalid(cpf, getRest(sumDigit(cpf, 10)), 10)) { return false; }
+  return true;
 };
-
 /**
  * Valida se é uma data com o formato especificado ou, quando não especificado,
  * valida se é um dos formatos 'DD/MM/YYYY', 'DD-MM-YYYY' e 'YYYY-MM-DD'.
@@ -62,63 +55,58 @@ var isCPF = function (cpf) {
  * @param {String} [format]
  * @returns {Boolean}
  */
+
 var isDate = function (date, format) {
   if ( format === void 0 ) format = null;
 
   var from = format || getDateFormat(date);
   var isValid = from ? moment(date, from).isValid() : false;
-  return isValid
+  return isValid;
 };
-
 /**
  * Valida se o valor é um CPNJ válido.
  * @param {String} value
  * @returns {Boolean}
  */
+
 var isCNPJ = function (value) {
   if (!is(value, 'String')) {
-    return false
+    return false;
   }
 
   var digits = value.replace(/[\D]/gi, '');
-
   var dig1 = 0;
   var dig2 = 0;
-
   var validation = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-
   var digito = parseInt(digits.charAt(12) + digits.charAt(13));
 
-  var getRest = function (dig) { return (((dig % 11) < 2) ? 0 : (11 - (dig % 11))); };
+  var getRest = function (dig) { return dig % 11 < 2 ? 0 : 11 - dig % 11; };
 
   validation.map(function (v, i) {
-    dig1 += (i > 0 ? (digits.charAt(i - 1) * v) : 0);
+    dig1 += i > 0 ? digits.charAt(i - 1) * v : 0;
     dig2 += digits.charAt(i) * v;
   });
-
   dig1 = getRest(dig1);
   dig2 = getRest(dig2);
-
-  return (((dig1 * 10) + dig2) === digito)
+  return dig1 * 10 + dig2 === digito;
 };
-
 /**
  * Valida, de forma simples*, se o valor é um email válido.
  * @param {String} value
  * @returns {Boolean}
  */
+
 var isEmail = function (value) {
   var isValid = is(value, 'String') && /^.+@.+\..+$/.test(value);
-  return isValid
+  return isValid;
 };
 
-
-var validate = Object.freeze({
-	is: is,
-	isCPF: isCPF,
-	isDate: isDate,
-	isCNPJ: isCNPJ,
-	isEmail: isEmail
+var validate = /*#__PURE__*/Object.freeze({
+  is: is,
+  isCPF: isCPF,
+  isDate: isDate,
+  isCNPJ: isCNPJ,
+  isEmail: isEmail
 });
 
 /**
@@ -132,29 +120,34 @@ var validate = Object.freeze({
  * @param {String} date
  * @returns {String}
  */
+
 var getDateFormat = function (date) {
-  var isValid = is(date, 'String') && date.trim().length >= 10;
-  var format = !isValid ? null
-    : /^\d{4}-\d{2}-\d{2}/.test(date) ? ['YYYY-MM-DD', 'YYYY-MM-DD HH:mm:ss']
-    : /^\d{2}-\d{2}-\d{4}/.test(date) ? ['DD-MM-YYYY', 'DD-MM-YYYY HH:mm:ss']
-    : /^\d{2}\/\d{2}\/\d{4}/.test(date) ? ['DD/MM/YYYY', 'DD/MM/YYYY HH:mm:ss']
-    : null;
+  if (!is(date, 'String') || date.trim().length < 10) {
+    return null;
+  }
 
-  return format
+  if (/^\d{4}-\d{2}-\d{2}/.test(date)) {
+    return ['YYYY-MM-DD', 'YYYY-MM-DD HH:mm:ss'];
+  } else if (/^\d{2}-\d{2}-\d{4}/.test(date)) {
+    return ['DD-MM-YYYY', 'DD-MM-YYYY HH:mm:ss'];
+  } else if (/^\d{2}\/\d{2}\/\d{4}/.test(date)) {
+    return ['DD/MM/YYYY', 'DD/MM/YYYY HH:mm:ss'];
+  }
+
+  return null;
 };
-
 /**
  * Obtém o construtor do valor.
  * @param {*} value
  * @returns {String}
  */
+
 var getConstructor = function (value) {
   var string = Object.prototype.toString.call(value);
   var ref = /\[object (.*?)\]/.exec(string);
   var constructor = ref[1];
-  return constructor
+  return constructor;
 };
-
 /**
  * Usando um valor inicial, encadeia uma função e retorna seu resultado.
  * @param {A} initial
@@ -163,20 +156,20 @@ var getConstructor = function (value) {
  * @returns {B}
  * @template A, B
  */
+
 var chain = function (initial, callback, params) {
   var value = params.reduce(function (value, args) {
-    return callback(value).apply(value, [].concat( args ))
+    return callback(value).apply(value, [].concat( args ));
   }, initial);
-
-  return value
+  return value;
 };
-
 /**
  * Faz em forma de corrente o replace do texto usando os argumentos especificados.
  * @param {String} text
  * @param {Array.<*>} args
  * @returns {String}
  */
+
 var replace = function (text, args) { return chain(text, function (text) { return text.replace; }, args); };
 
 /**
@@ -189,17 +182,12 @@ var replace = function (text, args) { return chain(text, function (text) { retur
  * @param {String} cpf
  * @returns {String}
  */
+
 var toCPF = function (cpf) {
   var isValid = is(cpf, 'String');
-  var formatted = !isValid ? null : replace(cpf, [
-    [/\D/g, ''],
-    [/(\d{3})(\d)/, '$1.$2'],
-    [/(\d{3})(\d)/, '$1.$2'],
-    [/(\d{3})(\d{1,2})$/, '$1-$2']
-  ]);
-  return formatted
+  var formatted = !isValid ? null : replace(cpf, [[/\D/g, ''], [/(\d{3})(\d)/, '$1.$2'], [/(\d{3})(\d)/, '$1.$2'], [/(\d{3})(\d{1,2})$/, '$1-$2']]);
+  return formatted;
 };
-
 /**
  * Transforma um valor para a formatação de RG.
  * @example ```
@@ -210,17 +198,12 @@ var toCPF = function (cpf) {
  * @param {String} rg
  * @returns {String}
  */
+
 var toRG = function (rg) {
   var isValid = is(rg, 'String');
-  var formatted = !isValid ? null : replace(rg.toUpperCase(), [
-    [/[^\d|A|B|X]/g, ''],
-    [/(\d{2})(\d)/, '$1.$2'],
-    [/(\d{3})(\d)/, '$1.$2'],
-    [/(\d{3})([\d|A|B|X]{1})$/, '$1-$2']
-  ]);
-  return formatted
+  var formatted = !isValid ? null : replace(rg.toUpperCase(), [[/[^\d|A|B|X]/g, ''], [/(\d{2})(\d)/, '$1.$2'], [/(\d{3})(\d)/, '$1.$2'], [/(\d{3})([\d|A|B|X]{1})$/, '$1-$2']]);
+  return formatted;
 };
-
 /**
  * Formata um valor para a formatação de moeda.
  * @example ```
@@ -231,15 +214,12 @@ var toRG = function (rg) {
  * @param {String} number
  * @returns {String}
  */
-var toMoney = function (number) {
-  var isValid = is(number, 'Number') || (is(number, 'String') && !isNaN(number));
-  var formatted = !isValid ? null : 'R$ ' + replace((+number).toFixed(2), [
-    ['.', ','],
-    [/(\d)(?=(\d{3})+(?!\d))/g, '$1.']
-  ]);
-  return formatted
-};
 
+var toMoney = function (number) {
+  var isValid = is(number, 'Number') || is(number, 'String') && !isNaN(number);
+  var formatted = !isValid ? null : 'R$ ' + replace((+number).toFixed(2), [['.', ','], [/(\d)(?=(\d{3})+(?!\d))/g, '$1.']]);
+  return formatted;
+};
 /**
  * Obtém a quantidade de anos a partir da data.
  * @example ```
@@ -250,14 +230,14 @@ var toMoney = function (number) {
  * @param {String} date
  * @returns {Number}
  */
+
 var toYears = function (date) {
   var format = getDateFormat(date);
   var from = format ? moment(date, format) : null;
   var diff = from ? moment().diff(from, 'years') : null;
   var years = is(diff, 'Number') && !isNaN(diff) ? diff : null;
-  return years
+  return years;
 };
-
 /**
  * Formata para o formato de dias.
  * @example ```
@@ -268,12 +248,12 @@ var toYears = function (date) {
  * @param {Number} quantity
  * @returns {String}
  */
+
 var toDays = function (quantity) {
   var isValid = is(quantity, 'Number') && Number.isFinite(quantity);
-  var days = (quantity === 1) ? '1 dia' : ((isValid ? ~~(quantity) : 0) + " dias");
-  return days
+  var days = quantity === 1 ? '1 dia' : ((isValid ? ~~quantity : 0) + " dias");
+  return days;
 };
-
 /**
  * Formata uma data 'YYYY-MM-DD' ou 'DD-MM-YYYY' em 'DD/MM/YYYY'. Transforma
  * a data em 'YYYY-MM-DD' caso o segundo parâmetro seja "true".
@@ -289,6 +269,7 @@ var toDays = function (quantity) {
  * @param {{ from: String, to: String, UTC: Boolean }} [options]
  * @returns {String}
  */
+
 var toDate = function (date, ref) {
   if ( ref === void 0 ) ref = {};
   var to = ref.to; if ( to === void 0 ) to = 'DD/MM/YYYY';
@@ -296,14 +277,15 @@ var toDate = function (date, ref) {
   var isUTC = ref.UTC; if ( isUTC === void 0 ) isUTC = false;
 
   var isValid = from && isDate(date, from);
+
   if (!isValid) {
-    return null
+    return null;
   }
+
   var formatter = isUTC ? moment.utc : moment;
   var formatted = formatter(date, from).format(to);
-  return formatted
+  return formatted;
 };
-
 /**
  * Usa a formatação de datas para retornar um intervalo.
  * @example ```
@@ -313,15 +295,15 @@ var toDate = function (date, ref) {
  * @param {{ from: String, to: String }} [options]
  * @returns {String}
  */
+
 var toInterval = function (dates, options) {
   if ( options === void 0 ) options = {};
 
   var start = dates.start;
   var end = dates.end;
   var interval = (toDate(start, options)) + " a " + (toDate(end, options));
-  return interval
+  return interval;
 };
-
 /**
  * Faz uma verificação simples e coloca o caractere para vazio caso o valor seja
  * vazio (null, undefined, '').
@@ -329,29 +311,23 @@ var toInterval = function (dates, options) {
  * @param {String} char
  * @returns {String}
  */
+
 var toEmpty = function (value, char) {
   if ( char === void 0 ) char = '-';
 
   return value || char;
 };
-
 /**
  * Formata um valor para o formato de telefone.
  * @param {String} value
  * @returns {String}
  */
+
 var toPhone = function (value) {
   var isValid = is(value, 'String');
-  var formatted = !isValid ? null : replace(value, [
-    [/\D/g, ''],
-    [/(\d{1,2})/, '($1'],
-    [/(\(\d{2})(\d{1,4})/, '$1) $2'],
-    [/( \d{4})(\d{1,4})/, '$1-$2'],
-    [/( \d{4})(?:-)(\d{1})(\d{4})/, '$1$2-$3']
-  ]);
-  return formatted
+  var formatted = !isValid ? null : replace(value, [[/\D/g, ''], [/(\d{1,2})/, '($1'], [/(\(\d{2})(\d{1,4})/, '$1) $2'], [/( \d{4})(\d{1,4})/, '$1-$2'], [/( \d{4})(?:-)(\d{1})(\d{4})/, '$1$2-$3']]);
+  return formatted;
 };
-
 /**
  * Formata o texto removendo seus acentos.
  * @example ```
@@ -361,58 +337,51 @@ var toPhone = function (value) {
  * @param {String} value
  * @returns {String}
  */
+
 var toClean = function (value) {
   var isValid = is(value, 'String');
   var formatted = !isValid ? null : normalize.normalizeDiacritics(value);
-  return formatted
+  return formatted;
 };
-
 /**
  * Formata um texto o transformando em _kebab-case_.
  * @param {String} value
  * @returns {String}
  */
-var toSlug = function (value) {
-  if (!is(value, 'String')) { // Short-circuit to handle all non-string values
-    return null               // and return null.
-  }
-  var formatted = replace(normalize__default(value), [
-    [/&/g, '-e-'],
-    [/\W/g, '-'],
-    [/--+/g, '-'],
-    [/(^-+)|(-+$)/, '']
-  ]);
-  return formatted
-};
 
+var toSlug = function (value) {
+  if (!is(value, 'String')) {
+    return null;
+  }
+
+  var formatted = replace(normalize__default(value), [[/&/g, '-e-'], [/\W/g, '-'], [/--+/g, '-'], [/(^-+)|(-+$)/, '']]);
+  return formatted;
+};
 /**
  * Formata um valor para CEP.
  * @param {String} value
  * @returns {Boolean}
  */
+
 var toCEP = function (value) {
   var isValid = is(value, 'String');
-  var formatted = !isValid ? null : replace(value, [
-    [/\D/g, ''],
-    [/(\d{5})(\d{1,3})/, '$1-$2']
-  ]);
-  return formatted
+  var formatted = !isValid ? null : replace(value, [[/\D/g, ''], [/(\d{5})(\d{1,3})/, '$1-$2']]);
+  return formatted;
 };
 
-
-var format = Object.freeze({
-	toCPF: toCPF,
-	toRG: toRG,
-	toMoney: toMoney,
-	toYears: toYears,
-	toDays: toDays,
-	toDate: toDate,
-	toInterval: toInterval,
-	toEmpty: toEmpty,
-	toPhone: toPhone,
-	toClean: toClean,
-	toSlug: toSlug,
-	toCEP: toCEP
+var format = /*#__PURE__*/Object.freeze({
+  toCPF: toCPF,
+  toRG: toRG,
+  toMoney: toMoney,
+  toYears: toYears,
+  toDays: toDays,
+  toDate: toDate,
+  toInterval: toInterval,
+  toEmpty: toEmpty,
+  toPhone: toPhone,
+  toClean: toClean,
+  toSlug: toSlug,
+  toCEP: toCEP
 });
 
 /**
@@ -421,26 +390,27 @@ var format = Object.freeze({
  * @param {function(Vue): Promise} action
  */
 var Loadable = function (action) { return ({
-  data: function data () {
+  data: function data() {
     return {
       isLoading: true
-    }
+    };
   },
-  mounted: function mounted () {
+
+  mounted: function mounted() {
     var this$1 = this;
 
-    (action ? action(this) : Promise.resolve())
-      .then(function () {
-        this$1.isLoading = false;
-      });
+    (action ? action(this) : Promise.resolve()).then(function () {
+      this$1.isLoading = false;
+    });
   }
-}); };
 
+}); };
 /**
  * Resolve o problema das propriedades não inicializadas que não poderiam ser
  * observadas.
  * @param {{}} template
  */
+
 var ObservableFix = function (template) {
   if ( template === void 0 ) template = {};
 
@@ -451,31 +421,36 @@ var ObservableFix = function (template) {
       default: function () { return Object.assign({}, template); }
     }
   },
-  data: function data () {
+
+  data: function data() {
     return {
       selected: Object.assign({}, template)
-    }
+    };
   },
+
   watch: {
-    data: function data () {
+    data: function data() {
       this.cloneData();
     }
+
   },
   methods: {
-    cloneData: function cloneData () {
+    cloneData: function cloneData() {
       this.selected = Object.assign({}, template, this.data);
     }
+
   },
-  mounted: function mounted () {
+
+  mounted: function mounted() {
     this.cloneData();
   }
+
 });
 };
 
-
-var mixin = Object.freeze({
-	Loadable: Loadable,
-	ObservableFix: ObservableFix
+var mixin = /*#__PURE__*/Object.freeze({
+  Loadable: Loadable,
+  ObservableFix: ObservableFix
 });
 
 /**
@@ -483,6 +458,7 @@ var mixin = Object.freeze({
  * @param {vee-validate.Validator} Validator
  * @param {Object.<String, { name: String, getMessage: Function }>} options
  */
+
 var VeeValidateIntegration = function (Validator, options) {
   var defaultOptions = {
     isCPF: {
@@ -498,15 +474,11 @@ var VeeValidateIntegration = function (Validator, options) {
       getMessage: function () { return 'Data inválida.'; }
     }
   };
-
   var rules = Object.assign({}, defaultOptions, options);
-
-  Object.keys(rules)
-    .map(function (key) { return Object.assign({}, rules[key], { validate: validate[key] }); })
-    .filter(function (rule) { return is(rules, 'Object'); })
-    .forEach(function (rule) { return Validator.extend(rule.name, rule); });
-
-  return true
+  Object.keys(rules).map(function (key) { return Object.assign({}, rules[key], {
+    validate: validate[key]
+  }); }).filter(function (rule) { return is(rule, 'Object'); }).forEach(function (rule) { return Validator.extend(rule.name, rule); });
+  return true;
 };
 
 var integrations = {
@@ -527,6 +499,7 @@ var integrations = {
  * @param {Vue} Vue
  * @param {Options} options
  */
+
 var install = function (Vue, options) {
   if ( options === void 0 ) options = {};
 
@@ -545,7 +518,6 @@ var install = function (Vue, options) {
     Vue.prototype.$validate = validate;
   }
 };
-
 /**
  * Integra-se a lib definida usando o object/função de integração e as opções da
  * integração.
@@ -560,12 +532,14 @@ var install = function (Vue, options) {
  * @param {Object} options
  * @returns {Boolean}
  */
+
+
 var integrate = function (lib, integrator, options) {
   if ( options === void 0 ) options = {};
 
   var integration = integrations.hasOwnProperty(lib) ? integrations[lib] : null;
   var success = integration ? integration(integrator, options) : false;
-  return success
+  return success;
 };
 
 var index = {
@@ -579,4 +553,4 @@ var index = {
 exports.format = format;
 exports.validate = validate;
 exports.mixin = mixin;
-exports['default'] = index;
+exports.default = index;

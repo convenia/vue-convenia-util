@@ -15,7 +15,7 @@
     "email": "vitorluizc@outlook.com"
   },
   "license": "MIT",
-  "main": "./dist/vue-convenia-util.common.js",
+  "main": "./dist/vue-convenia-util.cjs.js",
   "module": "./dist/vue-convenia-util.es.js",
   "watch": {
     "build": "src/*.js",
@@ -24,29 +24,27 @@
   "scripts": {
     "start": "npm-watch",
     "test": "standard ./**/*.js && ava ./test/*.test.js",
-    "build": "bili ./src/index.js --format es --format cjs --exports named",
+    "build": "bili src/index.js --format es,cjs --exports named --js buble",
     "prepare": "npm run build && npm run test"
   },
   "devDependencies": {
-    "ava": "^0.24.0",
-    "bili": "^0.19.0",
-    "moment": "^2.19.2",
+    "ava": "^0.25.0",
+    "bili": "^3.1.2",
+    "moment": "^2.22.2",
     "npm-watch": "^0.3.0",
-    "poi": "^9.5.4",
-    "sinon": "^4.1.2",
-    "standard": "^10.0.3",
-    "vue": "^2.5.9"
+    "sinon": "^6.2.0",
+    "standard": "^12.0.1",
+    "vue": "^2.5.17"
   },
   "peerDependencies": {
     "moment": "2.x"
   },
   "standard": {
     "ignore": [
-      "dist/vue-convenia-util.common.js",
-      "dist/vue-convenia-util.es.js"
+      "dist/"
     ]
   },
   "dependencies": {
-    "normalize-text": "^0.2.0"
+    "normalize-text": "^0.4.3"
   }
 }
