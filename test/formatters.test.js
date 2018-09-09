@@ -39,8 +39,8 @@ test('toMoney: Não formata valores inválidos', (context) => {
 })
 
 test('toYears: Obtém em anos a diferença de uam data', (context) => {
-  context.is(format.toYears('28/03/1996'), 21)
-  context.is(format.toYears('1979-04-13'), 38)
+  context.is(format.toYears('28/03/1996'), 22)
+  context.is(format.toYears('1979-04-13'), 39)
 })
 
 test('toYears: Não formata valores inválidos', (context) => {
