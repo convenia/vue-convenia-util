@@ -173,21 +173,46 @@ var chain = function (initial, callback, params) {
 var replace = function (text, args) { return chain(text, function (text) { return text.replace; }, args); };
 
 /**
+ * Decorador de formatadores. Formata o valor que passar pela função de validação.
+ * @param {function():boolean} validator
+ * @param {function():T} formatter
+ * @returns {function():(null | T)}
+ * @template T
+ */
+
+var formatFor = function (validator, formatter) { return function () {
+  var isValid = validator.apply(null, arguments);
+  var formatted = isValid ? formatter.apply(null, arguments) : null;
+  return formatted;
+}; };
+/**
+ * Decorador de formatadores. Formata o valor se ele for do tipo declarado.
+ * @param {String} type
+ * @param {function():T} formatter
+ * @returns {function():(null | T)}
+ * @template T
+ */
+
+
+var formatForType = function (type, formatter) {
+  return formatFor(function (value) { return is(value, type); }, formatter);
+};
+/**
  * Transforma um valor para a formatação de CPF.
  * @example ```
  * ('00000000000') => '000.000.000-00'
  * ('12345678') => '123.456.78'
  * ('Abacaxi') => null
  * ```
- * @param {String} cpf
+ * @param {String} value
  * @returns {String}
  */
 
-var toCPF = function (cpf) {
-  var isValid = is(cpf, 'String');
-  var formatted = !isValid ? null : replace(cpf, [[/\D/g, ''], [/(\d{3})(\d)/, '$1.$2'], [/(\d{3})(\d)/, '$1.$2'], [/(\d{3})(\d{1,2})$/, '$1-$2']]);
+
+var toCPF = formatForType('String', function (value) {
+  var formatted = replace(value, [[/\D/g, ''], [/(\d{3})(\d)/, '$1.$2'], [/(\d{3})(\d)/, '$1.$2'], [/(\d{3})(\d{1,2})$/, '$1-$2']]);
   return formatted;
-};
+});
 /**
  * Transforma um valor para a formatação de RG.
  * @example ```
@@ -195,15 +220,14 @@ var toCPF = function (cpf) {
  * ('12345678') => '123.456.78'
  * ('Abacaxi') => null
  * ```
- * @param {String} rg
+ * @param {String} value
  * @returns {String}
  */
 
-var toRG = function (rg) {
-  var isValid = is(rg, 'String');
-  var formatted = !isValid ? null : replace(rg.toUpperCase(), [[/[^\d|A|B|X]/g, ''], [/(\d{2})(\d)/, '$1.$2'], [/(\d{3})(\d)/, '$1.$2'], [/(\d{3})([\d|A|B|X]{1})$/, '$1-$2']]);
+var toRG = formatForType('String', function (value) {
+  var formatted = replace(value.toUpperCase(), [[/[^\d|A|B|X]/g, ''], [/(\d{2})(\d)/, '$1.$2'], [/(\d{3})(\d)/, '$1.$2'], [/(\d{3})([\d|A|B|X]{1})$/, '$1-$2']]);
   return formatted;
-};
+});
 /**
  * Formata um valor para a formatação de moeda.
  * @example ```
@@ -211,15 +235,14 @@ var toRG = function (rg) {
  * (15.50) => 'R$ 15,50'
  * ('Abacaxi') => null
  * ```
- * @param {String} number
+ * @param {String} value
  * @returns {String}
  */
 
-var toMoney = function (number) {
-  var isValid = is(number, 'Number') || is(number, 'String') && !isNaN(number);
-  var formatted = !isValid ? null : 'R$ ' + replace((+number).toFixed(2), [['.', ','], [/(\d)(?=(\d{3})+(?!\d))/g, '$1.']]);
+var toMoney = formatFor(function (value) { return is(value, 'Number') || is(value, 'String') && !isNaN(value); }, function (value) {
+  var formatted = 'R$ ' + replace((+value).toFixed(2), [['.', ','], [/(\d)(?=(\d{3})+(?!\d))/g, '$1.']]);
   return formatted;
-};
+});
 /**
  * Obtém a quantidade de anos a partir da data.
  * @example ```
@@ -245,14 +268,14 @@ var toYears = function (date) {
  * (1) => '1 dia'
  * (0) => '0 dias'
  * ```
- * @param {Number} quantity
+ * @param {Number} value
  * @returns {String}
  */
 
-var toDays = function (quantity) {
-  var isValid = is(quantity, 'Number') && Number.isFinite(quantity);
-  var days = quantity === 1 ? '1 dia' : ((isValid ? ~~quantity : 0) + " dias");
-  return days;
+var toDays = function (value) {
+  var isValid = is(value, 'Number') && Number.isFinite(value);
+  var formatted = value === 1 ? '1 dia' : ((isValid ? ~~value : 0) + " dias");
+  return formatted;
 };
 /**
  * Formata uma data 'YYYY-MM-DD' ou 'DD-MM-YYYY' em 'DD/MM/YYYY'. Transforma
@@ -265,27 +288,26 @@ var toDays = function (quantity) {
  * ('2006-12-21', true) => '2006-12-21'
  * ('2006/12/21') => null
  * ```
- * @param {String} date
+ * @param {String} value
  * @param {{ from: String, to: String, UTC: Boolean }} [options]
  * @returns {String}
  */
 
-var toDate = function (date, ref) {
+var toDate = formatFor(function (value, ref) {
+  if ( ref === void 0 ) ref = {};
+  var from = ref.from; if ( from === void 0 ) from = getDateFormat(value);
+
+  return from && isDate(value, from);
+}, function (value, ref) {
   if ( ref === void 0 ) ref = {};
   var to = ref.to; if ( to === void 0 ) to = 'DD/MM/YYYY';
-  var from = ref.from; if ( from === void 0 ) from = getDateFormat(date);
+  var from = ref.from; if ( from === void 0 ) from = getDateFormat(value);
   var isUTC = ref.UTC; if ( isUTC === void 0 ) isUTC = false;
 
-  var isValid = from && isDate(date, from);
-
-  if (!isValid) {
-    return null;
-  }
-
   var formatter = isUTC ? moment.utc : moment;
-  var formatted = formatter(date, from).format(to);
+  var formatted = formatter(value, from).format(to);
   return formatted;
-};
+});
 /**
  * Usa a formatação de datas para retornar um intervalo.
  * @example ```
@@ -323,11 +345,10 @@ var toEmpty = function (value, char) {
  * @returns {String}
  */
 
-var toPhone = function (value) {
-  var isValid = is(value, 'String');
-  var formatted = !isValid ? null : replace(value, [[/\D/g, ''], [/(\d{1,2})/, '($1'], [/(\(\d{2})(\d{1,4})/, '$1) $2'], [/( \d{4})(\d{1,4})/, '$1-$2'], [/( \d{4})(?:-)(\d{1})(\d{4})/, '$1$2-$3']]);
+var toPhone = formatForType('String', function (value) {
+  var formatted = replace(value, [[/\D/g, ''], [/(\d{1,2})/, '($1'], [/(\(\d{2})(\d{1,4})/, '$1) $2'], [/( \d{4})(\d{1,4})/, '$1-$2'], [/( \d{4})(?:-)(\d{1})(\d{4})/, '$1$2-$3']]);
   return formatted;
-};
+});
 /**
  * Formata o texto removendo seus acentos.
  * @example ```
@@ -338,36 +359,27 @@ var toPhone = function (value) {
  * @returns {String}
  */
 
-var toClean = function (value) {
-  var isValid = is(value, 'String');
-  var formatted = !isValid ? null : normalize.normalizeDiacritics(value);
-  return formatted;
-};
+var toClean = formatForType('String', normalize.normalizeDiacritics);
 /**
  * Formata um texto o transformando em _kebab-case_.
  * @param {String} value
  * @returns {String}
  */
 
-var toSlug = function (value) {
-  if (!is(value, 'String')) {
-    return null;
-  }
-
+var toSlug = formatForType('String', function (value) {
   var formatted = replace(normalize__default(value), [[/&/g, '-e-'], [/\W/g, '-'], [/--+/g, '-'], [/(^-+)|(-+$)/, '']]);
   return formatted;
-};
+});
 /**
  * Formata um valor para CEP.
  * @param {String} value
  * @returns {Boolean}
  */
 
-var toCEP = function (value) {
-  var isValid = is(value, 'String');
-  var formatted = !isValid ? null : replace(value, [[/\D/g, ''], [/(\d{5})(\d{1,3})/, '$1-$2']]);
+var toCEP = formatForType('String', function (value) {
+  var formatted = replace(value, [[/\D/g, ''], [/(\d{5})(\d{1,3})/, '$1-$2']]);
   return formatted;
-};
+});
 
 var format = /*#__PURE__*/Object.freeze({
   toCPF: toCPF,

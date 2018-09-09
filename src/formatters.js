@@ -4,25 +4,48 @@ import { getDateFormat, replace } from './helpers'
 import { is, isDate } from './validators'
 
 /**
+ * Decorador de formatadores. Formata o valor que passar pela função de validação.
+ * @param {function():boolean} validator
+ * @param {function():T} formatter
+ * @returns {function():(null | T)}
+ * @template T
+ */
+const formatFor = (validator, formatter) => function () {
+  const isValid = validator.apply(null, arguments)
+  const formatted = isValid ? formatter.apply(null, arguments) : null
+  return formatted
+}
+
+/**
+ * Decorador de formatadores. Formata o valor se ele for do tipo declarado.
+ * @param {String} type
+ * @param {function():T} formatter
+ * @returns {function():(null | T)}
+ * @template T
+ */
+const formatForType = (type, formatter) => {
+  return formatFor((value) => is(value, type), formatter)
+}
+
+/**
  * Transforma um valor para a formatação de CPF.
  * @example ```
  * ('00000000000') => '000.000.000-00'
  * ('12345678') => '123.456.78'
  * ('Abacaxi') => null
  * ```
- * @param {String} cpf
+ * @param {String} value
  * @returns {String}
  */
-export const toCPF = (cpf) => {
-  const isValid = is(cpf, 'String')
-  const formatted = !isValid ? null : replace(cpf, [
+export const toCPF = formatForType('String', (value) => {
+  const formatted = replace(value, [
     [/\D/g, ''],
     [/(\d{3})(\d)/, '$1.$2'],
     [/(\d{3})(\d)/, '$1.$2'],
     [/(\d{3})(\d{1,2})$/, '$1-$2']
   ])
   return formatted
-}
+})
 
 /**
  * Transforma um valor para a formatação de RG.
@@ -31,19 +54,18 @@ export const toCPF = (cpf) => {
  * ('12345678') => '123.456.78'
  * ('Abacaxi') => null
  * ```
- * @param {String} rg
+ * @param {String} value
  * @returns {String}
  */
-export const toRG = (rg) => {
-  const isValid = is(rg, 'String')
-  const formatted = !isValid ? null : replace(rg.toUpperCase(), [
+export const toRG = formatForType('String', (value) => {
+  const formatted = replace(value.toUpperCase(), [
     [/[^\d|A|B|X]/g, ''],
     [/(\d{2})(\d)/, '$1.$2'],
     [/(\d{3})(\d)/, '$1.$2'],
     [/(\d{3})([\d|A|B|X]{1})$/, '$1-$2']
   ])
   return formatted
-}
+})
 
 /**
  * Formata um valor para a formatação de moeda.
@@ -52,17 +74,19 @@ export const toRG = (rg) => {
  * (15.50) => 'R$ 15,50'
  * ('Abacaxi') => null
  * ```
- * @param {String} number
+ * @param {String} value
  * @returns {String}
  */
-export const toMoney = (number) => {
-  const isValid = is(number, 'Number') || (is(number, 'String') && !isNaN(number))
-  const formatted = !isValid ? null : 'R$ ' + replace((+number).toFixed(2), [
-    ['.', ','],
-    [/(\d)(?=(\d{3})+(?!\d))/g, '$1.']
-  ])
-  return formatted
-}
+export const toMoney = formatFor(
+  (value) => is(value, 'Number') || (is(value, 'String') && !isNaN(value)),
+  (value) => {
+    const formatted = 'R$ ' + replace((+value).toFixed(2), [
+      ['.', ','],
+      [/(\d)(?=(\d{3})+(?!\d))/g, '$1.']
+    ])
+    return formatted
+  }
+)
 
 /**
  * Obtém a quantidade de anos a partir da data.
@@ -89,13 +113,13 @@ export const toYears = (date) => {
  * (1) => '1 dia'
  * (0) => '0 dias'
  * ```
- * @param {Number} quantity
+ * @param {Number} value
  * @returns {String}
  */
-export const toDays = (quantity) => {
-  const isValid = is(quantity, 'Number') && Number.isFinite(quantity)
-  const days = (quantity === 1) ? '1 dia' : `${isValid ? ~~(quantity) : 0} dias`
-  return days
+export const toDays = (value) => {
+  const isValid = is(value, 'Number') && Number.isFinite(value)
+  const formatted = (value === 1) ? '1 dia' : `${isValid ? ~~(value) : 0} dias`
+  return formatted
 }
 
 /**
@@ -109,19 +133,18 @@ export const toDays = (quantity) => {
  * ('2006-12-21', true) => '2006-12-21'
  * ('2006/12/21') => null
  * ```
- * @param {String} date
+ * @param {String} value
  * @param {{ from: String, to: String, UTC: Boolean }} [options]
  * @returns {String}
  */
-export const toDate = (date, { to = 'DD/MM/YYYY', from = getDateFormat(date), UTC: isUTC = false } = {}) => {
-  const isValid = from && isDate(date, from)
-  if (!isValid) {
-    return null
+export const toDate = formatFor(
+  (value, { from = getDateFormat(value) } = {}) => from && isDate(value, from),
+  (value, { to = 'DD/MM/YYYY', from = getDateFormat(value), UTC: isUTC = false } = {}) => {
+    const formatter = isUTC ? moment.utc : moment
+    const formatted = formatter(value, from).format(to)
+    return formatted
   }
-  const formatter = isUTC ? moment.utc : moment
-  const formatted = formatter(date, from).format(to)
-  return formatted
-}
+)
 
 /**
  * Usa a formatação de datas para retornar um intervalo.
@@ -152,9 +175,8 @@ export const toEmpty = (value, char = '-') => value || char
  * @param {String} value
  * @returns {String}
  */
-export const toPhone = (value) => {
-  const isValid = is(value, 'String')
-  const formatted = !isValid ? null : replace(value, [
+export const toPhone = formatForType('String', (value) => {
+  const formatted = replace(value, [
     [/\D/g, ''],
     [/(\d{1,2})/, '($1'],
     [/(\(\d{2})(\d{1,4})/, '$1) $2'],
@@ -162,7 +184,7 @@ export const toPhone = (value) => {
     [/( \d{4})(?:-)(\d{1})(\d{4})/, '$1$2-$3']
   ])
   return formatted
-}
+})
 
 /**
  * Formata o texto removendo seus acentos.
@@ -173,21 +195,14 @@ export const toPhone = (value) => {
  * @param {String} value
  * @returns {String}
  */
-export const toClean = (value) => {
-  const isValid = is(value, 'String')
-  const formatted = !isValid ? null : normalizeDiacritics(value)
-  return formatted
-}
+export const toClean = formatForType('String', normalizeDiacritics)
 
 /**
  * Formata um texto o transformando em _kebab-case_.
  * @param {String} value
  * @returns {String}
  */
-export const toSlug = (value) => {
-  if (!is(value, 'String')) {
-    return null
-  }
+export const toSlug = formatForType('String', (value) => {
   const formatted = replace(normalize(value), [
     [/&/g, '-e-'],
     [/\W/g, '-'],
@@ -195,18 +210,17 @@ export const toSlug = (value) => {
     [/(^-+)|(-+$)/, '']
   ])
   return formatted
-}
+})
 
 /**
  * Formata um valor para CEP.
  * @param {String} value
  * @returns {Boolean}
  */
-export const toCEP = (value) => {
-  const isValid = is(value, 'String')
-  const formatted = !isValid ? null : replace(value, [
+export const toCEP = formatForType('String', (value) => {
+  const formatted = replace(value, [
     [/\D/g, ''],
     [/(\d{5})(\d{1,3})/, '$1-$2']
   ])
   return formatted
-}
+})
