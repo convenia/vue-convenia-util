@@ -25,7 +25,7 @@ const VeeValidateIntegration = (Validator, options) => {
 
   Object.keys(rules)
     .map(key => Object.assign({}, rules[key], { validate: validate[key] }))
-    .filter(rule => validate.is(rules, 'Object'))
+    .filter(rule => validate.is(rule, 'Object'))
     .forEach(rule => Validator.extend(rule.name, rule))
 
   return true
