@@ -5,109 +5,9 @@ Object.defineProperty(exports, '__esModule', { value: true });
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
 var moment = _interopDefault(require('moment'));
+var brazilianValues = require('brazilian-values');
 var normalize = require('normalize-text');
 var normalize__default = _interopDefault(normalize);
-
-/**
- * Valida se o construtor do valor é o especificado.
- * @example ```
- * (12, 'Number') => true
- * ({ name: 'Lucas' }, 'Object') => true
- * ([2, 3], 'Set') => false
- * ```
- * @param {*} value
- * @param {String} constructor
- * @returns {Boolean}
- */
-
-var is = function (value, constructor) {
-  var isEquals = constructor === getConstructor(value);
-  return isEquals;
-};
-var isCPF = function (cpf) {
-  var isInvalid = function (cpf, rest, pos) { return rest !== parseInt(cpf.substring(pos, pos + 1)); };
-
-  var sumDigit = function (cpf, digit) { return 11 - cpf.substring(0, digit).split('').reduce(function (acc, curr, index) {
-    acc += parseInt(curr) * (digit + 1 - index);
-    return acc;
-  }, 0) % 11; };
-
-  var getRest = function (sum) { return sum > 9 ? 0 : sum; };
-
-  if (!is(cpf, 'String')) { return false; }
-  cpf = cpf.replace(/[\D]/gi, '');
-  if (!cpf.match(/^\d+$/)) { return false; }
-  if (cpf === '00000000000' || cpf.length !== 11) { return false; }
-  if (isInvalid(cpf, getRest(sumDigit(cpf, 9)), 9)) { return false; }
-  if (isInvalid(cpf, getRest(sumDigit(cpf, 10)), 10)) { return false; }
-  return true;
-};
-/**
- * Valida se é uma data com o formato especificado ou, quando não especificado,
- * valida se é um dos formatos 'DD/MM/YYYY', 'DD-MM-YYYY' e 'YYYY-MM-DD'.
- * @example ```
- * ('3/102/2006') => false
- * ('31/02/2006') => false
- * ('21/12/2006') => true
- * ('21/12/2006', 'YYYY-MM-DD') => false
- * ```
- * @param {String} date
- * @param {String} [format]
- * @returns {Boolean}
- */
-
-var isDate = function (date, format) {
-  if ( format === void 0 ) format = null;
-
-  var from = format || getDateFormat(date);
-  var isValid = from ? moment(date, from).isValid() : false;
-  return isValid;
-};
-/**
- * Valida se o valor é um CPNJ válido.
- * @param {String} value
- * @returns {Boolean}
- */
-
-var isCNPJ = function (value) {
-  if (!is(value, 'String')) {
-    return false;
-  }
-
-  var digits = value.replace(/[\D]/gi, '');
-  var dig1 = 0;
-  var dig2 = 0;
-  var validation = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
-  var digito = parseInt(digits.charAt(12) + digits.charAt(13));
-
-  var getRest = function (dig) { return dig % 11 < 2 ? 0 : 11 - dig % 11; };
-
-  validation.map(function (v, i) {
-    dig1 += i > 0 ? digits.charAt(i - 1) * v : 0;
-    dig2 += digits.charAt(i) * v;
-  });
-  dig1 = getRest(dig1);
-  dig2 = getRest(dig2);
-  return dig1 * 10 + dig2 === digito;
-};
-/**
- * Valida, de forma simples*, se o valor é um email válido.
- * @param {String} value
- * @returns {Boolean}
- */
-
-var isEmail = function (value) {
-  var isValid = is(value, 'String') && /^.+@.+\..+$/.test(value);
-  return isValid;
-};
-
-var validate = /*#__PURE__*/Object.freeze({
-  is: is,
-  isCPF: isCPF,
-  isDate: isDate,
-  isCNPJ: isCNPJ,
-  isEmail: isEmail
-});
 
 /**
  * Obtém o formato da data ou null se não for possível identificar.
@@ -173,6 +73,76 @@ var chain = function (initial, callback, params) {
 var replace = function (text, args) { return chain(text, function (text) { return text.replace; }, args); };
 
 /**
+ * Valida se o construtor do valor é o especificado.
+ * @example ```
+ * (12, 'Number') => true
+ * ({ name: 'Lucas' }, 'Object') => true
+ * ([2, 3], 'Set') => false
+ * ```
+ * @param {*} value
+ * @param {String} constructor
+ * @returns {Boolean}
+ */
+
+var is = function (value, constructor) {
+  var isEquals = constructor === getConstructor(value);
+  return isEquals;
+};
+/**
+ * Valida se o valor é um CPF válido.
+ * @param {String} value
+ * @returns {Boolean}
+ */
+
+var isCPF = function (value) { return is(value, 'String') && brazilianValues.isCPF(value); };
+/**
+ * Valida se é uma data com o formato especificado ou, quando não especificado,
+ * valida se é um dos formatos 'DD/MM/YYYY', 'DD-MM-YYYY' e 'YYYY-MM-DD'.
+ * @example ```
+ * ('3/102/2006') => false
+ * ('31/02/2006') => false
+ * ('21/12/2006') => true
+ * ('21/12/2006', 'YYYY-MM-DD') => false
+ * ```
+ * @param {String} date
+ * @param {String} [format]
+ * @returns {Boolean}
+ */
+
+var isDate = function (date, format) {
+  if ( format === void 0 ) format = null;
+
+  var from = format || getDateFormat(date);
+  var isValid = from ? moment(date, from).isValid() : false;
+  return isValid;
+};
+/**
+ * Valida se o valor é um CPNJ válido.
+ * @param {String} value
+ * @returns {Boolean}
+ */
+
+var isCNPJ = function (value) { return is(value, 'String') && brazilianValues.isCNPJ(value); };
+/**
+ * Valida, de forma simples*, se o valor é um email válido.
+ * @param {String} value
+ * @returns {Boolean}
+ */
+
+var isEmail = function (value) {
+  var isValid = is(value, 'String') && /^.+@.+\..+$/.test(value);
+  return isValid;
+};
+
+var validate = /*#__PURE__*/Object.freeze({
+  is: is,
+  isCPF: isCPF,
+  isDate: isDate,
+  isCNPJ: isCNPJ,
+  isEmail: isEmail
+});
+
+/**
  * Decorador de formatadores. Formata o valor que passar pela função de validação.
  * @param {function():boolean} validator
  * @param {function():T} formatter
@@ -209,25 +179,19 @@ var formatForType = function (type, formatter) {
  */
 
 
-var toCPF = formatForType('String', function (value) {
-  var formatted = replace(value, [[/\D/g, ''], [/(\d{3})(\d)/, '$1.$2'], [/(\d{3})(\d)/, '$1.$2'], [/(\d{3})(\d{1,2})$/, '$1-$2']]);
-  return formatted;
-});
+var toCPF = formatForType('String', brazilianValues.formatToCPF);
 /**
  * Transforma um valor para a formatação de RG.
  * @example ```
  * ('000000000') => '00.000.000-0'
  * ('12345678') => '123.456.78'
- * ('Abacaxi') => null
+ * ('Abacaxi') => ''
  * ```
  * @param {String} value
  * @returns {String}
  */
 
-var toRG = formatForType('String', function (value) {
-  var formatted = replace(value.toUpperCase(), [[/[^\d|A|B|X]/g, ''], [/(\d{2})(\d)/, '$1.$2'], [/(\d{3})(\d)/, '$1.$2'], [/(\d{3})([\d|A|B|X]{1})$/, '$1-$2']]);
-  return formatted;
-});
+var toRG = formatForType('String', function (value) { return brazilianValues.formatToRG(value, 'SP'); });
 /**
  * Formata um valor para a formatação de moeda.
  * @example ```
@@ -239,10 +203,7 @@ var toRG = formatForType('String', function (value) {
  * @returns {String}
  */
 
-var toMoney = formatFor(function (value) { return is(value, 'Number') || is(value, 'String') && !isNaN(value); }, function (value) {
-  var formatted = 'R$ ' + replace((+value).toFixed(2), [['.', ','], [/(\d)(?=(\d{3})+(?!\d))/g, '$1.']]);
-  return formatted;
-});
+var toMoney = formatFor(function (value) { return is(value, 'Number') || is(value, 'String') && !isNaN(value); }, brazilianValues.formatToBRL);
 /**
  * Obtém a quantidade de anos a partir da data.
  * @example ```
@@ -345,10 +306,7 @@ var toEmpty = function (value, char) {
  * @returns {String}
  */
 
-var toPhone = formatForType('String', function (value) {
-  var formatted = replace(value, [[/\D/g, ''], [/(\d{1,2})/, '($1'], [/(\(\d{2})(\d{1,4})/, '$1) $2'], [/( \d{4})(\d{1,4})/, '$1-$2'], [/( \d{4})(?:-)(\d{1})(\d{4})/, '$1$2-$3']]);
-  return formatted;
-});
+var toPhone = formatForType('String', brazilianValues.formatToPhone);
 /**
  * Formata o texto removendo seus acentos.
  * @example ```
@@ -376,10 +334,14 @@ var toSlug = formatForType('String', function (value) {
  * @returns {Boolean}
  */
 
-var toCEP = formatForType('String', function (value) {
-  var formatted = replace(value, [[/\D/g, ''], [/(\d{5})(\d{1,3})/, '$1-$2']]);
-  return formatted;
-});
+var toCEP = formatForType('String', brazilianValues.formatToCEP);
+/**
+ * Formata um valor para CNPJ.
+ * @param {String} value
+ * @returns {Boolean}
+ */
+
+var toCNPJ = formatForType('String', brazilianValues.formatToCNPJ);
 
 var format = /*#__PURE__*/Object.freeze({
   toCPF: toCPF,
@@ -393,7 +355,8 @@ var format = /*#__PURE__*/Object.freeze({
   toPhone: toPhone,
   toClean: toClean,
   toSlug: toSlug,
-  toCEP: toCEP
+  toCEP: toCEP,
+  toCNPJ: toCNPJ
 });
 
 /**

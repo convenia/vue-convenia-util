@@ -102,7 +102,7 @@ test('toPhone: Formata um valor para telefone', (context) => {
   context.is(format.toPhone('11'), '(11')
   context.is(format.toPhone('11971626'), '(11) 9716-26')
   context.is(format.toPhone('1197162679'), '(11) 9716-2679')
-  context.is(format.toPhone('11971626799'), '(11) 97162-6799')
+  context.is(format.toPhone('11971626799'), '(11) 9 7162-6799')
 })
 
 test('toPhone: Não formata valores inválidos', (context) => {

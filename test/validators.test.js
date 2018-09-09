@@ -15,9 +15,9 @@ test('isCPF: Verdadeiro para um CPF válido', (context) => {
   context.is(validate.isCPF('36641876870'), true)
   context.is(validate.isCPF('213.198.013-20'), false)
   context.is(validate.isCPF('2131201872781'), false)
-  context.is(validate.isCPF('11111111111'), true)
+  context.is(validate.isCPF('11111111111'), false)
   context.is(validate.isCPF('00000000000'), false)
-  context.is(validate.isCPF('111.111.111-11'), true)
+  context.is(validate.isCPF('111.111.111-11'), false)
   context.is(validate.isCPF('UHASHUISIH910'), false)
 })
 

@@ -1,7 +1,8 @@
 import moment from 'moment'
 import normalize, { normalizeDiacritics } from 'normalize-text'
-import { getDateFormat, replace } from './helpers'
 import { is, isDate } from './validators'
+import { getDateFormat, replace } from './helpers'
+import { formatToBRL, formatToCPF, formatToRG, formatToPhone, formatToCEP, formatToCNPJ } from 'brazilian-values'
 
 /**
  * Decorador de formatadores. Formata o valor que passar pela função de validação.
@@ -37,35 +38,19 @@ const formatForType = (type, formatter) => {
  * @param {String} value
  * @returns {String}
  */
-export const toCPF = formatForType('String', (value) => {
-  const formatted = replace(value, [
-    [/\D/g, ''],
-    [/(\d{3})(\d)/, '$1.$2'],
-    [/(\d{3})(\d)/, '$1.$2'],
-    [/(\d{3})(\d{1,2})$/, '$1-$2']
-  ])
-  return formatted
-})
+export const toCPF = formatForType('String', formatToCPF)
 
 /**
  * Transforma um valor para a formatação de RG.
  * @example ```
  * ('000000000') => '00.000.000-0'
  * ('12345678') => '123.456.78'
- * ('Abacaxi') => null
+ * ('Abacaxi') => ''
  * ```
  * @param {String} value
  * @returns {String}
  */
-export const toRG = formatForType('String', (value) => {
-  const formatted = replace(value.toUpperCase(), [
-    [/[^\d|A|B|X]/g, ''],
-    [/(\d{2})(\d)/, '$1.$2'],
-    [/(\d{3})(\d)/, '$1.$2'],
-    [/(\d{3})([\d|A|B|X]{1})$/, '$1-$2']
-  ])
-  return formatted
-})
+export const toRG = formatForType('String', (value) => formatToRG(value, 'SP'))
 
 /**
  * Formata um valor para a formatação de moeda.
@@ -79,13 +64,7 @@ export const toRG = formatForType('String', (value) => {
  */
 export const toMoney = formatFor(
   (value) => is(value, 'Number') || (is(value, 'String') && !isNaN(value)),
-  (value) => {
-    const formatted = 'R$ ' + replace((+value).toFixed(2), [
-      ['.', ','],
-      [/(\d)(?=(\d{3})+(?!\d))/g, '$1.']
-    ])
-    return formatted
-  }
+  formatToBRL
 )
 
 /**
@@ -175,16 +154,7 @@ export const toEmpty = (value, char = '-') => value || char
  * @param {String} value
  * @returns {String}
  */
-export const toPhone = formatForType('String', (value) => {
-  const formatted = replace(value, [
-    [/\D/g, ''],
-    [/(\d{1,2})/, '($1'],
-    [/(\(\d{2})(\d{1,4})/, '$1) $2'],
-    [/( \d{4})(\d{1,4})/, '$1-$2'],
-    [/( \d{4})(?:-)(\d{1})(\d{4})/, '$1$2-$3']
-  ])
-  return formatted
-})
+export const toPhone = formatForType('String', formatToPhone)
 
 /**
  * Formata o texto removendo seus acentos.
@@ -217,10 +187,11 @@ export const toSlug = formatForType('String', (value) => {
  * @param {String} value
  * @returns {Boolean}
  */
-export const toCEP = formatForType('String', (value) => {
-  const formatted = replace(value, [
-    [/\D/g, ''],
-    [/(\d{5})(\d{1,3})/, '$1-$2']
-  ])
-  return formatted
-})
+export const toCEP = formatForType('String', formatToCEP)
+
+/**
+ * Formata um valor para CNPJ.
+ * @param {String} value
+ * @returns {Boolean}
+ */
+export const toCNPJ = formatForType('String', formatToCNPJ)
