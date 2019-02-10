@@ -21,6 +21,6 @@ export const Loadable = (action) => ({
     await Promise.resolve(loaderFn.call(this))
     this.isLoading = false
   }
-}
-)
+})
+
 export default Loadable
