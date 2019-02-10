@@ -1,4 +1,5 @@
-import * as validate from './validators'
+import * as validate from './helpers/validators'
+
 
 /**
  * Integra automaticamente as funções de validação ao vee-validade.
