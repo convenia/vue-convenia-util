@@ -47,6 +47,7 @@
     ]
   },
   "dependencies": {
+    "dayjs": "^1.8.5",
     "normalize-text": "^0.2.0"
   }
 }
