@@ -34,3 +34,26 @@ export const getDateFormat = (date) => {
 
   return format
 }
+
+export const formatDateBR = value => {
+  if (!value) return ''
+
+  const date = typeof value === 'string'
+    ? new Date(`${value}T00:00:00`)
+    : new Date(value)
+
+  return date.toLocaleDateString('pt-BR')
+}
+
+export const formatDateUS = date => {
+  if (!date) return ''
+
+  return date.substr(0, 10).split('/').reverse().join('-')
+}
+
+export const calculateAge = (birthday) => {
+  const ageDifMs = Date.now() - birthday.getTime();
+  const ageDate = new Date(ageDifMs);
+
+  return Math.abs(ageDate.getUTCFullYear() - 1970);
+}
