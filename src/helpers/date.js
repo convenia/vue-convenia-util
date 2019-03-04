@@ -88,6 +88,14 @@ export const getDateFormat = (date) => {
   return format
 }
 
+/**
+ * Receives a date in US string format or unix timestamp and returns
+ * it in brazillian format.
+ *
+ * @param {String|Number} value - The date to be formatted.
+ * @returns {String} - the formmated date.
+ *
+ */
 export const formatDateBR = value => {
   if (!value) return ''
 
@@ -98,12 +106,28 @@ export const formatDateBR = value => {
   return date.toLocaleDateString('pt-BR')
 }
 
+
+/**
+ * Receives a date in BR string format and returns its US equivalent
+ *
+ * @param {String} value - The date to be formatted.
+ * @returns {String} - the formmated date.
+ *
+ */
 export const formatDateUS = date => {
   if (!date) return ''
 
   return date.substr(0, 10).split('/').reverse().join('-')
 }
 
+
+/**
+ * Calculates a person's age given a birthday.
+ *
+ * @param {Date} birthday - A Date instance representing the birthday.
+ * @returns {Number} - The person's age.
+ *
+ */
 export const calculateAge = (birthday) => {
   const ageDifMs = Date.now() - birthday.getTime();
   const ageDate = new Date(ageDifMs);
