@@ -4,26 +4,196 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
-var moment = _interopDefault(require('moment'));
+var dayjs = _interopDefault(require('dayjs-ext'));
+var customParseFormat = _interopDefault(require('dayjs-ext/plugin/customParseFormat'));
 var normalize = require('normalize-text');
 var normalize__default = _interopDefault(normalize);
+var dayjs$1 = _interopDefault(require('dayjs'));
 
 /**
- * Valida se o construtor do valor é o especificado.
- * @example ```
- * (12, 'Number') => true
- * ({ name: 'Lucas' }, 'Object') => true
- * ([2, 3], 'Set') => false
- * ```
- * @param {*} value
- * @param {String} constructor
- * @returns {Boolean}
+ * @param {Number} ms - The time in miliseconds.
+ * @returns {String} -
  */
-var is = function (value, constructor) {
-  var isEquals = constructor === getConstructor(value);
-  return isEquals
+
+
+
+/**
+ * Obtém o formato da data ou null se não for possível identificar.
+ * @example ```
+ * ('2000-21-12') => ['YYYY-DD-MM', 'YYYY-MM-DD HH:mm:ss']
+ * ('21-12-2000') => ['DD-MM-YYYY', 'DD-MM-YYYY HH:mm:ss']
+ * ('21/12/2000 23:59:18') => ['DD/MM/YYYY', 'DD/MM/YYYY HH:mm:ss']
+ * ('2000/12/21') => null
+ * ```
+ * @param {String} date
+ * @returns {String}
+ */
+var getDateFormat = function (date) {
+  var isValid = is(date, 'String') && date.trim().length >= 10;
+  var format = !isValid ? null
+    : /^\d{4}-\d{2}-\d{2}/.test(date) ? ['YYYY-MM-DD', 'YYYY-MM-DD HH:mm:ss']
+    : /^\d{2}-\d{2}-\d{4}/.test(date) ? ['DD-MM-YYYY', 'DD-MM-YYYY HH:mm:ss']
+    : /^\d{2}\/\d{2}\/\d{4}/.test(date) ? ['DD/MM/YYYY', 'DD/MM/YYYY HH:mm:ss']
+    : null;
+
+  return format
 };
 
+/**
+ * Obtém o construtor do valor.
+ * @param {*} value
+ * @returns {String}
+ */
+
+
+/**
+ * Usando um valor inicial, encadeia uma função e retorna seu resultado.
+ * @param {A} initial
+ * @param {function(A):function} callback
+ * @param {Array.<*>} params
+ * @returns {B}
+ * @template A, B
+ */
+
+var DELIMITER = '.';
+
+/**
+ * Spreads path into fields list.
+ * @param {string} path
+ * @returns {Array.<string>}
+ */
+var getProperties = function (path) { return is(path, 'String') ? path.split(DELIMITER) : []; };
+
+/**
+ * Deep object.
+ * @typedef {Object.<string, (number|boolean|string|Deep)>} Deep
+ */
+
+/**
+ * Checks if a propety is reachable.
+ * @param {Deep} object
+ * @param {string} property
+ * @returns {(number|boolean|string|null)}
+ */
+var getValue = function (object, property) {
+  var isReachable = is(object, 'Object') && object.hasOwnProperty(property);
+  var value = isReachable ? object[property] : null;
+  return value
+};
+
+/**
+ * Get value from object path.
+ * @param {Deep} object
+ * @param {(string|Array.<string>)} path
+ * @returns {(number|boolean|string|null)}
+ */
+var get = function (object, path) {
+  var properties = getProperties(path);
+  var value = properties.reduce(getValue, object);
+  return value
+};
+
+
+/**
+ * Get value from first object.
+ * @param {string} name
+ * @param {Deep[]} objects
+ * @param {function(*):boolean} [validate]
+ * @returns {*}
+ */
+var getProperty = function (name, objects, validate) {
+  if ( validate === void 0 ) validate = defaultValidator;
+
+  var properties = objects.map(function (object) { return get(object, name); });
+  var property = properties.find(function (property) { return validate(property); });
+  return property
+};
+
+/**
+ * @param {String} value -
+ * @returns {String} -
+ */
+
+
+
+/**
+ * Faz em forma de corrente o replace do texto usando os argumentos
+ * especificados.
+ *
+ * @param {String} text
+ * @param {Array.<*>} args
+ * @returns {String}
+ */
+var replace = function (text, args) { return chain(text, function (text) { return text.replace; }, args); };
+
+
+/**
+ * @param {Object} entyty -
+ * @param {Array<string>} props -
+ * @returns {String} -
+ */
+
+
+
+/**
+ * @param {String} word -
+ * @param {Array<string>} words -
+ * @returns {Booloean} -
+ */
+
+
+
+/**
+ * @param {Array} list -
+ * @param {String} strings -
+ * @param {Arrat} keys -
+ * @returns {Boolean} -
+ */
+
+dayjs$1.extend(customParseFormat);
+
+/**
+ * Check value's constructor name.
+ * @param {*} value
+ * @param {string} constructor
+ * @returns {boolean}
+ */
+
+var is = function (value, constructor) {
+  return Object.prototype.toString.call(value) === ("[object " + constructor + "]")
+};
+
+
+/**
+ * Creates a validator function that checks is value is included in values.
+ * @param {Array} values
+ * @returns {function(*):boolean}
+ */
+var includes = function (values) { return function (value) { return values.includes(value); }; };
+
+
+/**
+ * Checks if value is an alignment.
+ */
+var ALIGNMENTS = ['right', 'left', 'center'];
+var isAlignment = includes(ALIGNMENTS);
+
+
+/**
+ * Checks if value is a list of objects.
+ * @param {*} value
+ * @returns {boolean}
+ */
+var isContent = function (value) {
+  var isObject = function (value) { return is(value, 'Object'); };
+  var isContent = is(value, 'Array') && value.every(isObject);
+  return isContent
+};
+
+
+/**
+ *
+ */
 var isCPF = function (cpf) {
   var isInvalid = function (cpf, rest, pos) { return rest !== parseInt(cpf.substring(pos, pos + 1)); };
 
@@ -49,6 +219,7 @@ var isCPF = function (cpf) {
   return true
 };
 
+
 /**
  * Valida se é uma data com o formato especificado ou, quando não especificado,
  * valida se é um dos formatos 'DD/MM/YYYY', 'DD-MM-YYYY' e 'YYYY-MM-DD'.
@@ -66,9 +237,10 @@ var isDate = function (date, format) {
   if ( format === void 0 ) format = null;
 
   var from = format || getDateFormat(date);
-  var isValid = from ? moment(date, from).isValid() : false;
+  var isValid = from ? dayjs$1(date, { format: from }).isValid() : false;
   return isValid
 };
+
 
 /**
  * Valida se o valor é um CPNJ válido.
@@ -102,6 +274,7 @@ var isCNPJ = function (value) {
   return (((dig1 * 10) + dig2) === digito)
 };
 
+
 /**
  * Valida, de forma simples*, se o valor é um email válido.
  * @param {String} value
@@ -113,71 +286,26 @@ var isEmail = function (value) {
 };
 
 
+/**
+ * Checks if value is not null
+ * @param {*} value
+ * @returns {boolean}
+ */
+var defaultValidator = function (value) { return !is(value, 'Null'); };
+
+
 var validate = Object.freeze({
 	is: is,
+	isAlignment: isAlignment,
+	isContent: isContent,
 	isCPF: isCPF,
 	isDate: isDate,
 	isCNPJ: isCNPJ,
-	isEmail: isEmail
+	isEmail: isEmail,
+	defaultValidator: defaultValidator
 });
 
-/**
- * Obtém o formato da data ou null se não for possível identificar.
- * @example ```
- * ('2000-21-12') => ['YYYY-DD-MM', 'YYYY-MM-DD HH:mm:ss']
- * ('21-12-2000') => ['DD-MM-YYYY', 'DD-MM-YYYY HH:mm:ss']
- * ('21/12/2000 23:59:18') => ['DD/MM/YYYY', 'DD/MM/YYYY HH:mm:ss']
- * ('2000/12/21') => null
- * ```
- * @param {String} date
- * @returns {String}
- */
-var getDateFormat = function (date) {
-  var isValid = is(date, 'String') && date.trim().length >= 10;
-  var format = !isValid ? null
-    : /^\d{4}-\d{2}-\d{2}/.test(date) ? ['YYYY-MM-DD', 'YYYY-MM-DD HH:mm:ss']
-    : /^\d{2}-\d{2}-\d{4}/.test(date) ? ['DD-MM-YYYY', 'DD-MM-YYYY HH:mm:ss']
-    : /^\d{2}\/\d{2}\/\d{4}/.test(date) ? ['DD/MM/YYYY', 'DD/MM/YYYY HH:mm:ss']
-    : null;
-
-  return format
-};
-
-/**
- * Obtém o construtor do valor.
- * @param {*} value
- * @returns {String}
- */
-var getConstructor = function (value) {
-  var string = Object.prototype.toString.call(value);
-  var ref = /\[object (.*?)\]/.exec(string);
-  var constructor = ref[1];
-  return constructor
-};
-
-/**
- * Usando um valor inicial, encadeia uma função e retorna seu resultado.
- * @param {A} initial
- * @param {function(A):function} callback
- * @param {Array.<*>} params
- * @returns {B}
- * @template A, B
- */
-var chain = function (initial, callback, params) {
-  var value = params.reduce(function (value, args) {
-    return callback(value).apply(value, [].concat( args ))
-  }, initial);
-
-  return value
-};
-
-/**
- * Faz em forma de corrente o replace do texto usando os argumentos especificados.
- * @param {String} text
- * @param {Array.<*>} args
- * @returns {String}
- */
-var replace = function (text, args) { return chain(text, function (text) { return text.replace; }, args); };
+dayjs.extend(customParseFormat);
 
 /**
  * Transforma um valor para a formatação de CPF.
@@ -252,8 +380,8 @@ var toMoney = function (number) {
  */
 var toYears = function (date) {
   var format = getDateFormat(date);
-  var from = format ? moment(date, format) : null;
-  var diff = from ? moment().diff(from, 'years') : null;
+  var from = format ? dayjs(date, format) : null;
+  var diff = from ? dayjs().diff(from, 'years') : null;
   var years = is(diff, 'Number') && !isNaN(diff) ? diff : null;
   return years
 };
@@ -299,9 +427,12 @@ var toDate = function (date, ref) {
   if (!isValid) {
     return null
   }
-  var formatter = isUTC ? moment.utc : moment;
-  var formatted = formatter(date, from).format(to);
-  return formatted
+
+  var formatted = isUTC
+    ? dayjs(date,{ format: from, utc: true })
+    : dayjs(date,{ format: from });
+
+  return formatted.format(to)
 };
 
 /**
@@ -416,25 +547,84 @@ var format = Object.freeze({
 });
 
 /**
- * Adiciona o dado isLoading com true, que assim que o componente é montado e a
- * action é executada ele passa a ser false.
- * @param {function(Vue): Promise} action
+ * @param {Object} -
  */
-var Loadable = function (action) { return ({
-  data: function data () {
-    return {
-      isLoading: true
+var Alignable = function (ref) {
+  if ( ref === void 0 ) ref = {};
+  var cols = ref.cols; if ( cols === void 0 ) cols = 'cols';
+
+  return ({
+  props: {
+    align: {
+      type: String,
+      default: 'left',
+      validator: isAlignment
     }
   },
-  mounted: function mounted () {
-    var this$1 = this;
 
-    (action ? action(this) : Promise.resolve())
-      .then(function () {
-        this$1.isLoading = false;
-      });
+  methods: {
+    /**
+     * Get column's alignment.
+     * @param {number} index
+     * @returns {('right'|'left'|'center')}
+     */
+    $getAlignment: function $getAlignment (index) {
+      var col = this[cols][index];
+      var alignment = getProperty('align', [col, this._props], isAlignment);
+      return alignment
+    }
   }
+});
+};
+
+function __async(g){return new Promise(function(s,j){function c(a,x){try{var r=g[x?"throw":"next"](a);}catch(e){j(e);return}r.done?s(r.value):Promise.resolve(r.value).then(c,d);}function d(e){c(e,1);}c();})}
+
+/**
+ * Adiciona o dado isLoading com true, que assim que o componente e montado
+ * e a action e executada ele passa a ser false.
+ *
+ * @param {function(Vue): Promise} action - Action a ser executada, recebe
+ * o contexto do componente como parametro e deve retornar uma Promise.
+ *
+ */
+var Loadable = function (action) { return ({
+  data: function data () { return { isLoading: false } },
+
+  mounted: function mounted () {return __async(function*(){
+    var loaderFn = action || this.load;
+    var isLoadable = is(loaderFn, 'Function');
+
+    if (!isLoadable) { return }
+
+    this.isLoading = true;
+    yield Promise.resolve(loaderFn.call(this));
+    this.isLoading = false;
+  }.call(this))}
 }); };
+
+/**
+ *
+ */
+var MediaQuery = {
+  data: function data () {
+    return {
+      matchMedia: window.matchMedia('(max-width: 1023px)'),
+      isMobile: false
+    }
+  },
+  methods: {
+    setBreakpoint: function setBreakpoint () {
+      this.isMobile = this.matchMedia && this.matchMedia.matches;
+    }
+  },
+  beforeDestroy: function beforeDestroy () {
+    this.matchMedia.removeListener(this.setBreakpoint);
+  },
+  mounted: function mounted () {
+    this.matchMedia.addListener(this.setBreakpoint);
+    this.setBreakpoint();
+  }
+};
 
 /**
  * Resolve o problema das propriedades não inicializadas que não poderiam ser
@@ -472,10 +662,89 @@ var ObservableFix = function (template) {
 });
 };
 
+/*
+  - 'Shadowed' Vue mixin is suposed to be used together with Sass 'shadowed' sass mixin.
+
+  - Import the Vue mixin in your component and place a ref="shadowed" in the element
+    that you would like to have a shadowed scroll behavior.
+
+  - The element must have a wrapper div (father element) for the mixin to work properly.
+
+  - Place a @include shadowed($shadow-size) in the wrapper element (style section)
+*/
+
+var Shadowed = function (refName) {
+  if ( refName === void 0 ) refName = 'shadowed';
+
+  return ({
+  data: function data () {
+    return {
+      upperShadow: false,
+      bottomShadow: false
+    }
+  },
+
+  watch: {
+    upperShadow: function upperShadow (val) {
+      if (val) {
+        this.shadowedElement.classList.add('-upper-shadow');
+      } else {
+        this.shadowedElement.classList.remove('-upper-shadow');
+      }
+    },
+    bottomShadow: function bottomShadow (val) {
+      if (val) {
+        this.shadowedElement.classList.add('-bottom-shadow');
+      } else {
+        this.shadowedElement.classList.remove('-bottom-shadow');
+      }
+    }
+  },
+
+  computed: {
+    shadowedElement: function shadowedElement () {
+      return this.$refs[refName].hasOwnProperty('$el') ?
+        this.$refs[refName].$el : this.$refs[refName]
+    }
+  },
+
+  methods: {
+    toggleScrollShadow: function toggleScrollShadow () {
+      var ref = this.shadowedElement;
+      var scrollTop = ref.scrollTop;
+      var scrollHeight = ref.scrollHeight;
+      var clientHeight = ref.clientHeight;
+
+      this.upperShadow = scrollTop > 0;
+      this.bottomShadow = scrollHeight > (clientHeight + scrollTop);
+    }
+  },
+
+  beforeUpdate: function beforeUpdate () {
+    this.$nextTick(this.toggleScrollShadow);
+  },
+
+  mounted: function mounted () {
+    this.$nextTick(this.toggleScrollShadow);
+    window.addEventListener('resize', this.toggleScrollShadow);
+    this.shadowedElement.addEventListener('scroll', this.toggleScrollShadow);
+  },
+
+  beforeDestroy: function beforeDestroy () {
+    window.removeEventListener('resize', this.toggleScrollShadow);
+    this.shadowedElement.removeEventListener('scroll', this.toggleScrollShadow);
+  }
+});
+};
+
+
 
 var mixin = Object.freeze({
+	Alignable: Alignable,
 	Loadable: Loadable,
-	ObservableFix: ObservableFix
+	MediaQuery: MediaQuery,
+	ObservableFix: ObservableFix,
+	Shadowed: Shadowed
 });
 
 /**
@@ -576,7 +845,4 @@ var index = {
   mixin: mixin
 };
 
-exports.format = format;
-exports.validate = validate;
-exports.mixin = mixin;
 exports['default'] = index;

@@ -1,4 +1,4 @@
-import { getProperty, isAlignment } from '../helpers'
+import { getProperty, isAlignment } from '../helpers/index'
 
 /**
  * @param {Object} -

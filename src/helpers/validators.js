@@ -1,5 +1,6 @@
-import moment from 'moment'
-// import dayjs from 'dayjs'
+import dayjs from 'dayjs'
+import customParseFormat from 'dayjs-ext/plugin/customParseFormat'
+dayjs.extend(customParseFormat)
 
 import { getDateFormat, getConstructor } from './index'
 
@@ -87,7 +88,7 @@ export const isCPF = (cpf) => {
  */
 export const isDate = (date, format = null) => {
   const from = format || getDateFormat(date)
-  const isValid = from ? moment(date, from).isValid() : false
+  const isValid = from ? dayjs(date, { format: from }).isValid() : false
   return isValid
 }
 

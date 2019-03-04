@@ -1,5 +1,6 @@
-import moment from 'moment'
-// import dayjs from 'dayjs-ext'
+import dayjs from 'dayjs-ext'
+import customParseFormat from 'dayjs-ext/plugin/customParseFormat'
+dayjs.extend(customParseFormat)
 
 import normalize, { normalizeDiacritics } from 'normalize-text'
 
@@ -78,8 +79,8 @@ export const toMoney = (number) => {
  */
 export const toYears = (date) => {
   const format = getDateFormat(date)
-  const from = format ? moment(date, format) : null
-  const diff = from ? moment().diff(from, 'years') : null
+  const from = format ? dayjs(date, format) : null
+  const diff = from ? dayjs().diff(from, 'years') : null
   const years = is(diff, 'Number') && !isNaN(diff) ? diff : null
   return years
 }
@@ -120,9 +121,12 @@ export const toDate = (date, { to = 'DD/MM/YYYY', from = getDateFormat(date), UT
   if (!isValid) {
     return null
   }
-  const formatter = isUTC ? moment.utc : moment
-  const formatted = formatter(date, from).format(to)
-  return formatted
+
+  const formatted = isUTC
+    ? dayjs(date,{ format: from, utc: true })
+    : dayjs(date,{ format: from })
+
+  return formatted.format(to)
 }
 
 /**

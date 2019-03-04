@@ -1,4 +1,4 @@
-import { is } from '../helpers'
+import { is } from '../helpers/index'
 
 /**
  * Adiciona o dado isLoading com true, que assim que o componente e montado
