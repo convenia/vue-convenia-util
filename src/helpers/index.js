@@ -1,4 +1,5 @@
 export * from './date'
+export * from './money'
 export * from './formatters'
 export * from './functional'
 export * from './get'

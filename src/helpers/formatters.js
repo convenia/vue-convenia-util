@@ -49,59 +49,6 @@ export const toRG = (rg) => {
 }
 
 /**
- * Formata um valor para a formatação de moeda.
- * @example ```
- * ('1200') => 'R$ 1.200,00'
- * (15.50) => 'R$ 15,50'
- * ('Abacaxi') => null
- * ```
- * @param {String} number
- * @returns {String}
- */
-export const toMoney = (number) => {
-  const isValid = is(number, 'Number') || (is(number, 'String') && !isNaN(number))
-  const formatted = !isValid ? null : 'R$ ' + replace((+number).toFixed(2), [
-    ['.', ','],
-    [/(\d)(?=(\d{3})+(?!\d))/g, '$1.']
-  ])
-  return formatted
-}
-
-/**
- * Obtém a quantidade de anos a partir da data.
- * @example ```
- * ('21-12-2006') => 10
- * ('2000-12-21') => 16
- * ('Abacaxi') => null
- * ```
- * @param {String} date
- * @returns {Number}
- */
-export const toYears = (date) => {
-  const format = getDateFormat(date)
-  const from = format ? dayjs(date, format) : null
-  const diff = from ? dayjs().diff(from, 'years') : null
-  const years = is(diff, 'Number') && !isNaN(diff) ? diff : null
-  return years
-}
-
-/**
- * Formata para o formato de dias.
- * @example ```
- * (2) => '2 dias'
- * (1) => '1 dia'
- * (0) => '0 dias'
- * ```
- * @param {Number} quantity
- * @returns {String}
- */
-export const toDays = (quantity) => {
-  const isValid = is(quantity, 'Number') && Number.isFinite(quantity)
-  const days = (quantity === 1) ? '1 dia' : `${isValid ? ~~(quantity) : 0} dias`
-  return days
-}
-
-/**
  * Formata uma data 'YYYY-MM-DD' ou 'DD-MM-YYYY' em 'DD/MM/YYYY'. Transforma
  * a data em 'YYYY-MM-DD' caso o segundo parâmetro seja "true".
  * @example ```

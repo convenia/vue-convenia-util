@@ -2,17 +2,11 @@ import { is } from './index'
 
 
 /**
- * @param {Number} ms - The time in miliseconds.
- * @returns {String} -
+ * Converts hours to milliseconds
+ *
+ * @param {Number} value - The time in hours.
+ * @returns {}
  */
-export const toHours = (ms) => {
-  const hours = Math.floor(ms / 3600000)
-  const minutes = Math.floor((ms % 3600000) / 3600000 * 60)
-
-  return `${hours}:${minutes || '00'}`
-}
-
-
 export const toMilliseconds = (value) => {
   if (Number.isInteger(value)) return value
 
@@ -25,6 +19,52 @@ export const toMilliseconds = (value) => {
   return hours + minutes
 }
 
+/**
+ * Converts milliseconds to hours
+ *
+ * @param {Number} ms - The time in miliseconds.
+ * @returns {String} - The formmated time in `${hours}:${minutes}`.
+ */
+export const toHours = (ms) => {
+  const hours = Math.floor(ms / 3600000)
+  const minutes = Math.floor((ms % 3600000) / 3600000 * 60)
+
+  return `${hours}:${minutes || '00'}`
+}
+
+/**
+ * Formata para o formato de dias.
+ * @example ```
+ * (2) => '2 dias'
+ * (1) => '1 dia'
+ * (0) => '0 dias'
+ * ```
+ * @param {Number} quantity
+ * @returns {String}
+ */
+export const toDays = (quantity) => {
+  const isValid = is(quantity, 'Number') && Number.isFinite(quantity)
+  const days = (quantity === 1) ? '1 dia' : `${isValid ? ~~(quantity) : 0} dias`
+  return days
+}
+
+/**
+ * Obtém a quantidade de anos a partir da data.
+ * @example ```
+ * ('21-12-2006') => 10
+ * ('2000-12-21') => 16
+ * ('Abacaxi') => null
+ * ```
+ * @param {String} date
+ * @returns {Number}
+ */
+export const toYears = (date) => {
+  const format = getDateFormat(date)
+  const from = format ? dayjs(date, format) : null
+  const diff = from ? dayjs().diff(from, 'years') : null
+  const years = is(diff, 'Number') && !isNaN(diff) ? diff : null
+  return years
+}
 
 /**
  * Obtém o formato da data ou null se não for possível identificar.
