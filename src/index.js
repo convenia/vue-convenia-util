@@ -1,7 +1,7 @@
 import * as format from './helpers/formatters'
 import * as validate from './helpers/validators'
+import * as helpers from './helpers/helpers'
 import * as mixin from './mixins/index'
-import integrations from './integrations'
 
 /**
  * Opções do plugin.
@@ -34,30 +34,10 @@ const install = (Vue, options = {}) => {
   }
 }
 
-/**
- * Integra-se a lib definida usando o object/função de integração e as opções da
- * integração.
- * @example ```
- * import { Validator } from 'vee-validate'
- * import Util from 'vue-convenia-util'
- *
- * Util.integrate('vee-validate', Validator)
- * ```
- * @param {String} lib
- * @param {(Object|Function)} integrator
- * @param {Object} options
- * @returns {Boolean}
- */
-const integrate = (lib, integrator, options = {}) => {
-  const integration = integrations.hasOwnProperty(lib) ? integrations[lib] : null
-  const success = integration ? integration(integrator, options) : false
-  return success
-}
-
 export default {
   install,
-  integrate,
   validate,
   format,
-  mixin
+  mixin,
+  helpers
 }

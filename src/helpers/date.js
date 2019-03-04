@@ -13,6 +13,19 @@ export const toHours = (ms) => {
 }
 
 
+export const toMilliseconds = (value) => {
+  if (Number.isInteger(value)) return value
+
+  const parsedValue = value.replace('hs', '').split(':')
+  const hours = +(parsedValue[0] || 0) * 3600000
+  const minutes = (parsedValue[1] || '').length < 2
+    ? +(`${parsedValue[1] || 0}0`) * 60000
+    : +(parsedValue[1] || 0) * 60000
+
+  return hours + minutes
+}
+
+
 /**
  * Obtém o formato da data ou null se não for possível identificar.
  * @example ```
