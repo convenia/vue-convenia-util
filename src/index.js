@@ -1,6 +1,6 @@
 import * as format from './helpers/formatters'
 import * as validate from './helpers/validators'
-import * as helpers from './helpers/helpers'
+import * as helpers from './helpers/index'
 import * as mixin from './mixins/index'
 
 /**
