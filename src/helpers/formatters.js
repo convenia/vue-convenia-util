@@ -65,13 +65,9 @@ export const toRG = (rg) => {
  */
 export const toDate = (date, { to = 'DD/MM/YYYY', from = getDateFormat(date), UTC: isUTC = false } = {}) => {
   const isValid = from && isDate(date, from)
-  if (!isValid) {
-    return null
-  }
+  if (!isValid) return null
 
-  const formatted = isUTC
-    ? dayjs(date,{ format: from, utc: true })
-    : dayjs(date,{ format: from })
+  const formatted = dayjs(date,{ format: from, utc: isUTC })
 
   return formatted.format(to)
 }
