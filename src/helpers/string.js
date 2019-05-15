@@ -18,7 +18,8 @@ export const normalizeString = (value) => {
  * @param {Array.<*>} args
  * @returns {String}
  */
-export const replace = (text, args) => chain(text, text => text.replace, args)
+export const replace = (text, args) => args
+  .reduce((text, [ matcher, replaceBy ]) => text.replace(matcher, replaceBy), text)
 
 
 /**

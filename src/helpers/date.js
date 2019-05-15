@@ -1,3 +1,4 @@
+import dayjs from 'dayjs-ext'
 import { is } from './index'
 
 

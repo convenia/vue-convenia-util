@@ -1,4 +1,4 @@
-import dayjs from 'dayjs'
+import dayjs from 'dayjs-ext'
 import customParseFormat from 'dayjs-ext/plugin/customParseFormat'
 dayjs.extend(customParseFormat)
 
