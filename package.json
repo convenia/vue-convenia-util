@@ -23,13 +23,18 @@
   },
   "scripts": {
     "start": "npm-watch",
-    "test": "standard ./**/*.js && ava ./test/*.test.js",
+    "test": "jest",
     "build": "bili ./src/index.js --format es --format cjs --exports named",
     "prepare": "npm run build && npm run test"
   },
   "devDependencies": {
-    "ava": "^0.24.0",
+    "@babel/core": "^7.4.4",
+    "@babel/plugin-syntax-dynamic-import": "^7.2.0",
+    "@babel/plugin-transform-modules-commonjs": "^7.4.4",
+    "@babel/preset-env": "^7.4.4",
+    "babel-jest": "^24.8.0",
     "bili": "^0.19.0",
+    "jest": "^24.8.0",
     "npm-watch": "^0.3.0",
     "poi": "^9.5.4",
     "sinon": "^4.1.2",
