@@ -1,6 +1,5 @@
 import test from 'ava'
-import { format } from '../'
-import 'moment/locale/pt-br'
+import { format } from '../src'
 
 test('toCPF: Formata um valor, ou parte dele para CPF', (context) => {
   context.is(format.toCPF('00000000000'), '000.000.000-00')
