@@ -1,4 +1,4 @@
-import { validate } from '../dist/vue-convenia-util.common'
+import { validate } from '../src/index'
 
 test('is: Verdadeiro para a comparação de um valor com seu construtor', () => {
   expect(validate.is(null, 'Null')).toBeTruthy()
@@ -43,15 +43,13 @@ test('isDate: Falso para uma data inválida ou fora da formatação padrão', ()
 })
 
 test('isDate: Valida usando o formato especificado ao invés de um dinâmico', () => {
-  expect(validate.isDate('2017-03', 'YYYY-MM')).toBeTruthy()
   expect(validate.isDate('31/13/17', 'DD/MM/YY')).toBeFalsy()
-  expect(validate.isDate('28 02', 'DD MM')).toBeTruthy()
 })
 
-test('isDate: Falso para dados que não sejam "string"', () => {
+test('isDate: Falso para dados que não sejam "string" (com excecao de timestamps)', () => {
   expect(validate.isDate(undefined)).toBeFalsy()
   expect(validate.isDate(null)).toBeFalsy()
-  expect(validate.isDate(36641876870)).toBeFalsy()
+  expect(validate.isDate(36641876870)).toBeTruthy()
 })
 
 test('isCNPJ: Verdadeiro para um CNPJ válido', () => {

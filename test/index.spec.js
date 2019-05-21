@@ -1,5 +1,5 @@
 import sinon from 'sinon'
-import Util, { format, validate } from '../dist/vue-convenia-util.common'
+import install, { format, validate } from '../src/index'
 
 const getVue = () => {
   const Vue = class {
@@ -14,8 +14,8 @@ const getVue = () => {
   return Vue
 }
 
-test('A exportação padrão é um objeto', () => {
-  expect(typeof Util).toBe('object')
+test('A exportação padrão é uma função', () => {
+  expect(typeof install).toBe('function')
 })
 
 test('Exporta o namespace "format"', () => {
@@ -33,7 +33,7 @@ test('Implanta os plugins selecionados', () => {
   const spy = sinon.spy(Vue, 'filter')
   const vm = new Vue()
 
-  Util.install(Vue, {
+  install(Vue, {
     formatters: true,
     formatFilters: true,
     validators: true
@@ -49,7 +49,7 @@ test('Implanta apenas os plugins selecionados', () => {
   const spy = sinon.spy(Vue, 'filter')
   const vm = new Vue()
 
-  Util.install(Vue, {
+  install(Vue, {
     formatters: false,
     formatFilters: false,
     validators: false

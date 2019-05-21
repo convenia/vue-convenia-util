@@ -17,7 +17,8 @@ import * as mixin from './mixins/index'
  * @param {Vue} Vue
  * @param {Options} options
  */
-const install = (Vue, options = {}) => {
+
+export default (Vue, options = {}) => {
   if (options.formatters) {
     Vue.prototype.$format = format
   }
@@ -34,8 +35,7 @@ const install = (Vue, options = {}) => {
   }
 }
 
-export default {
-  install,
+export {
   validate,
   format,
   mixin,
