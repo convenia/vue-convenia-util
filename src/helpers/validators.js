@@ -76,19 +76,29 @@ export const isCPF = (cpf) => {
 /**
  * Valida se é uma data com o formato especificado ou, quando não especificado,
  * valida se é um dos formatos 'DD/MM/YYYY', 'DD-MM-YYYY' e 'YYYY-MM-DD'.
+ *
  * @example ```
  * ('3/102/2006') => false
  * ('31/02/2006') => false
  * ('21/12/2006') => true
  * ('21/12/2006', 'YYYY-MM-DD') => false
  * ```
+ *
  * @param {String} date
  * @param {String} [format]
  * @returns {Boolean}
  */
+
 export const isDate = (date, format = null) => {
   const from = format || getDateFormat(date)
-  const isValid = from ? dayjs(date, { format: from }).isValid() : false
+
+  // There's a lil' bug in dayjs where dayjs(null).isValid() returns false
+  // but dayjs(undefined).isValid() returns true.
+
+  const isValid = from
+    ? dayjs(date, { format: from }).isValid()
+    : dayjs(date || null).isValid()
+
   return isValid
 }
 

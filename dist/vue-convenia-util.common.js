@@ -6,16 +6,9 @@ function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'defau
 
 var dayjs = _interopDefault(require('dayjs-ext'));
 var customParseFormat = _interopDefault(require('dayjs-ext/plugin/customParseFormat'));
+require('dayjs-ext/locale/pt-br');
 var normalize = require('normalize-text');
 var normalize__default = _interopDefault(normalize);
-var dayjs$1 = _interopDefault(require('dayjs'));
-
-/**
- * @param {Number} ms - The time in miliseconds.
- * @returns {String} -
- */
-
-
 
 /**
  * Obtém o formato da data ou null se não for possível identificar.
@@ -31,12 +24,59 @@ var dayjs$1 = _interopDefault(require('dayjs'));
 var getDateFormat = function (date) {
   var isValid = is(date, 'String') && date.trim().length >= 10;
   var format = !isValid ? null
-    : /^\d{4}-\d{2}-\d{2}/.test(date) ? ['YYYY-MM-DD', 'YYYY-MM-DD HH:mm:ss']
-    : /^\d{2}-\d{2}-\d{4}/.test(date) ? ['DD-MM-YYYY', 'DD-MM-YYYY HH:mm:ss']
-    : /^\d{2}\/\d{2}\/\d{4}/.test(date) ? ['DD/MM/YYYY', 'DD/MM/YYYY HH:mm:ss']
+    : /^\d{4}-\d{2}-\d{2}$/.test(date) ? 'YYYY-MM-DD'
+    : /^\d{2}-\d{2}-\d{4}$/.test(date) ? 'DD-MM-YYYY'
+    : /^\d{2}\/\d{2}\/\d{4}$/.test(date) ? 'DD/MM/YYYY'
     : null;
 
   return format
+};
+
+/**
+ * Receives a date in US string format or unix timestamp and returns
+ * it in brazillian format.
+ *
+ * @param {String|Number} value - The date to be formatted.
+ * @returns {String} - the formmated date.
+ *
+ */
+var formatDateBR = function (value) {
+  if (!value) { return '' }
+
+  var date = typeof value === 'string'
+    ? new Date((value + "T00:00:00"))
+    : new Date(value);
+
+  return date.toLocaleDateString('pt-BR')
+};
+
+
+/**
+ * Receives a date in BR string format and returns its US equivalent
+ *
+ * @param {String} value - The date to be formatted.
+ * @returns {String} - the formmated date.
+ *
+ */
+var formatDateUS = function (date) {
+  if (!date) { return '' }
+
+  return date.substr(0, 10).split('/').reverse().join('-')
+};
+
+
+/**
+ * Calculates a person's age given a birthday.
+ *
+ * @param {Date} birthday - A Date instance representing the birthday.
+ * @returns {Number} - The person's age.
+ *
+ */
+var calculateAge = function (birthday) {
+  var ageDifMs = Date.now() - birthday.getTime();
+  var ageDate = new Date(ageDifMs);
+
+  return Math.abs(ageDate.getUTCFullYear() - 1970);
 };
 
 /**
@@ -44,7 +84,12 @@ var getDateFormat = function (date) {
  * @param {*} value
  * @returns {String}
  */
-
+var getConstructor = function (value) {
+  var string = Object.prototype.toString.call(value);
+  var ref = /\[object (.*?)\]/.exec(string);
+  var constructor = ref[1];
+  return constructor
+};
 
 /**
  * Usando um valor inicial, encadeia uma função e retorna seu resultado.
@@ -54,6 +99,13 @@ var getDateFormat = function (date) {
  * @returns {B}
  * @template A, B
  */
+var chain = function (initial, callback, params) {
+  var value = params.reduce(function (value, args) {
+    return callback(value).apply(value, [].concat( args ))
+  }, initial);
+
+  return value
+};
 
 var DELIMITER = '.';
 
@@ -113,7 +165,9 @@ var getProperty = function (name, objects, validate) {
  * @param {String} value -
  * @returns {String} -
  */
-
+var normalizeString = function (value) {
+  return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+};
 
 
 /**
@@ -124,7 +178,13 @@ var getProperty = function (name, objects, validate) {
  * @param {Array.<*>} args
  * @returns {String}
  */
-var replace = function (text, args) { return chain(text, function (text) { return text.replace; }, args); };
+var replace = function (text, args) { return args
+  .reduce(function (text, ref) {
+    var matcher = ref[0];
+    var replaceBy = ref[1];
+
+    return text.replace(matcher, replaceBy);
+  }, text); };
 
 
 /**
@@ -132,7 +192,13 @@ var replace = function (text, args) { return chain(text, function (text) { retur
  * @param {Array<string>} props -
  * @returns {String} -
  */
-
+var getEntityQuery = function (entity, props) {
+  var entityObj = entity || {};
+  return props.map(function (prop) {
+    var value = normalizeString(get(entityObj, prop) || '').toLowerCase();
+    return value
+  }).join(' ')
+};
 
 
 /**
@@ -140,7 +206,7 @@ var replace = function (text, args) { return chain(text, function (text) { retur
  * @param {Array<string>} words -
  * @returns {Booloean} -
  */
-
+var matches = function (word, words) { return (word ? words.split(word).length - 1 : 0); };
 
 
 /**
@@ -149,8 +215,22 @@ var replace = function (text, args) { return chain(text, function (text) { retur
  * @param {Arrat} keys -
  * @returns {Boolean} -
  */
+var findBy = function (list, strings, keys) {
+  if ( list === void 0 ) list = [];
+  if ( strings === void 0 ) strings = '';
+  if ( keys === void 0 ) keys = [];
 
-dayjs$1.extend(customParseFormat);
+  var terms = strings.toLowerCase().split(' ');
+
+  return list.filter(function (el) { return keys.some(function (key) {
+      var text = el[key].toLowerCase();
+
+      return terms.some(function (term) { return text.includes(term); })
+    }); }
+  )
+};
+
+dayjs.extend(customParseFormat);
 
 /**
  * Check value's constructor name.
@@ -223,21 +303,31 @@ var isCPF = function (cpf) {
 /**
  * Valida se é uma data com o formato especificado ou, quando não especificado,
  * valida se é um dos formatos 'DD/MM/YYYY', 'DD-MM-YYYY' e 'YYYY-MM-DD'.
+ *
  * @example ```
  * ('3/102/2006') => false
  * ('31/02/2006') => false
  * ('21/12/2006') => true
  * ('21/12/2006', 'YYYY-MM-DD') => false
  * ```
+ *
  * @param {String} date
  * @param {String} [format]
  * @returns {Boolean}
  */
+
 var isDate = function (date, format) {
   if ( format === void 0 ) format = null;
 
   var from = format || getDateFormat(date);
-  var isValid = from ? dayjs$1(date, { format: from }).isValid() : false;
+
+  // There's a lil' bug in dayjs where dayjs(null).isValid() returns false
+  // but dayjs(undefined).isValid() returns true.
+
+  var isValid = from
+    ? dayjs(date, { format: from }).isValid()
+    : dayjs(date || null).isValid();
+
   return isValid
 };
 
@@ -305,18 +395,63 @@ var validate = Object.freeze({
 	defaultValidator: defaultValidator
 });
 
+
+
+var index$1 = Object.freeze({
+	getDateFormat: getDateFormat,
+	formatDateBR: formatDateBR,
+	formatDateUS: formatDateUS,
+	calculateAge: calculateAge,
+	toCPF: toCPF,
+	toRG: toRG,
+	toInterval: toInterval,
+	toEmpty: toEmpty,
+	toPhone: toPhone,
+	toClean: toClean,
+	toSlug: toSlug,
+	toCEP: toCEP,
+	toMoney: toMoney,
+	toMilliseconds: toMilliseconds,
+	toHours: toHours,
+	toDays: toDays,
+	toYears: toYears,
+	toDate: toDate,
+	getConstructor: getConstructor,
+	chain: chain,
+	get: get,
+	getProperty: getProperty,
+	normalizeString: normalizeString,
+	replace: replace,
+	getEntityQuery: getEntityQuery,
+	matches: matches,
+	findBy: findBy,
+	is: is,
+	isAlignment: isAlignment,
+	isContent: isContent,
+	isCPF: isCPF,
+	isDate: isDate,
+	isCNPJ: isCNPJ,
+	isEmail: isEmail,
+	defaultValidator: defaultValidator
+});
+
 dayjs.extend(customParseFormat);
+dayjs.locale('pt-br');
+
 
 /**
  * Transforma um valor para a formatação de CPF.
+ *
  * @example ```
  * ('00000000000') => '000.000.000-00'
  * ('12345678') => '123.456.78'
  * ('Abacaxi') => null
  * ```
+ *
  * @param {String} cpf
  * @returns {String}
  */
+
 var toCPF = function (cpf) {
   var isValid = is(cpf, 'String');
   var formatted = !isValid ? null : replace(cpf, [
@@ -328,16 +463,20 @@ var toCPF = function (cpf) {
   return formatted
 };
 
+
 /**
  * Transforma um valor para a formatação de RG.
+ *
  * @example ```
  * ('000000000') => '00.000.000-0'
  * ('12345678') => '123.456.78'
  * ('Abacaxi') => null
  * ```
+ *
  * @param {String} rg
  * @returns {String}
  */
+
 var toRG = function (rg) {
   var isValid = is(rg, 'String');
   var formatted = !isValid ? null : replace(rg.toUpperCase(), [
@@ -349,101 +488,19 @@ var toRG = function (rg) {
   return formatted
 };
 
-/**
- * Formata um valor para a formatação de moeda.
- * @example ```
- * ('1200') => 'R$ 1.200,00'
- * (15.50) => 'R$ 15,50'
- * ('Abacaxi') => null
- * ```
- * @param {String} number
- * @returns {String}
- */
-var toMoney = function (number) {
-  var isValid = is(number, 'Number') || (is(number, 'String') && !isNaN(number));
-  var formatted = !isValid ? null : 'R$ ' + replace((+number).toFixed(2), [
-    ['.', ','],
-    [/(\d)(?=(\d{3})+(?!\d))/g, '$1.']
-  ]);
-  return formatted
-};
-
-/**
- * Obtém a quantidade de anos a partir da data.
- * @example ```
- * ('21-12-2006') => 10
- * ('2000-12-21') => 16
- * ('Abacaxi') => null
- * ```
- * @param {String} date
- * @returns {Number}
- */
-var toYears = function (date) {
-  var format = getDateFormat(date);
-  var from = format ? dayjs(date, format) : null;
-  var diff = from ? dayjs().diff(from, 'years') : null;
-  var years = is(diff, 'Number') && !isNaN(diff) ? diff : null;
-  return years
-};
-
-/**
- * Formata para o formato de dias.
- * @example ```
- * (2) => '2 dias'
- * (1) => '1 dia'
- * (0) => '0 dias'
- * ```
- * @param {Number} quantity
- * @returns {String}
- */
-var toDays = function (quantity) {
-  var isValid = is(quantity, 'Number') && Number.isFinite(quantity);
-  var days = (quantity === 1) ? '1 dia' : ((isValid ? ~~(quantity) : 0) + " dias");
-  return days
-};
-
-/**
- * Formata uma data 'YYYY-MM-DD' ou 'DD-MM-YYYY' em 'DD/MM/YYYY'. Transforma
- * a data em 'YYYY-MM-DD' caso o segundo parâmetro seja "true".
- * @example ```
- * ('21-12-2006') => '21/12/2006'
- * ('2006-12-21') => '21/12/2006'
- * ('21/12/2006') => '21/12/2006'
- * ('21/12/2006', true) => '2006-12-21'
- * ('2006-12-21', true) => '2006-12-21'
- * ('2006/12/21') => null
- * ```
- * @param {String} date
- * @param {{ from: String, to: String, UTC: Boolean }} [options]
- * @returns {String}
- */
-var toDate = function (date, ref) {
-  if ( ref === void 0 ) ref = {};
-  var to = ref.to; if ( to === void 0 ) to = 'DD/MM/YYYY';
-  var from = ref.from; if ( from === void 0 ) from = getDateFormat(date);
-  var isUTC = ref.UTC; if ( isUTC === void 0 ) isUTC = false;
-
-  var isValid = from && isDate(date, from);
-  if (!isValid) {
-    return null
-  }
-
-  var formatted = isUTC
-    ? dayjs(date,{ format: from, utc: true })
-    : dayjs(date,{ format: from });
-
-  return formatted.format(to)
-};
 
 /**
  * Usa a formatação de datas para retornar um intervalo.
+ *
  * @example ```
  * ({ start: '21-12-2006', end: '31-12-2006' }) => '21/12/2006 a 31/12/2006'
  * ```
+ *
  * @param {{ start: String, end: String }} dates
  * @param {{ from: String, to: String }} [options]
  * @returns {String}
  */
+
 var toInterval = function (dates, options) {
   if ( options === void 0 ) options = {};
 
@@ -453,24 +510,30 @@ var toInterval = function (dates, options) {
   return interval
 };
 
+
 /**
  * Faz uma verificação simples e coloca o caractere para vazio caso o valor seja
  * vazio (null, undefined, '').
+ *
  * @param {*} value
  * @param {String} char
  * @returns {String}
  */
+
 var toEmpty = function (value, char) {
   if ( char === void 0 ) char = '-';
 
   return value || char;
 };
 
+
 /**
  * Formata um valor para o formato de telefone.
+ *
  * @param {String} value
  * @returns {String}
  */
+
 var toPhone = function (value) {
   var isValid = is(value, 'String');
   var formatted = !isValid ? null : replace(value, [
@@ -483,26 +546,33 @@ var toPhone = function (value) {
   return formatted
 };
 
+
 /**
  * Formata o texto removendo seus acentos.
+ *
  * @example ```
  * ('Vítor') => 'Vitor'
  * ('Olá, tudo bem com você?') => 'Ola, tudo bem com voce?'
  * ```
+ *
  * @param {String} value
  * @returns {String}
  */
+
 var toClean = function (value) {
   var isValid = is(value, 'String');
   var formatted = !isValid ? null : normalize.normalizeDiacritics(value);
   return formatted
 };
 
+
 /**
  * Formata um texto o transformando em _kebab-case_.
+ *
  * @param {String} value
  * @returns {String}
  */
+
 var toSlug = function (value) {
   if (!is(value, 'String')) { // Short-circuit to handle all non-string values
     return null               // and return null.
@@ -516,11 +586,14 @@ var toSlug = function (value) {
   return formatted
 };
 
+
 /**
  * Formata um valor para CEP.
+ *
  * @param {String} value
  * @returns {Boolean}
  */
+
 var toCEP = function (value) {
   var isValid = is(value, 'String');
   var formatted = !isValid ? null : replace(value, [
@@ -531,19 +604,159 @@ var toCEP = function (value) {
 };
 
 
+/**
+ * Formata um valor para a formatação de moeda.
+ *
+ * @example ```
+ * ('1200') => 'R$ 1.200,00'
+ * (15.50) => 'R$ 15,50'
+ * ('Abacaxi') => null
+ * ```
+ *
+ * @param {String} number
+ * @returns {String}
+ */
+
+var toMoney = function (number) {
+  var isValid = is(number, 'Number') || (is(number, 'String') && !isNaN(number));
+  var formatted = !isValid ? null : 'R$ ' + replace((+number).toFixed(2), [
+    ['.', ','],
+    [/(\d)(?=(\d{3})+(?!\d))/g, '$1.']
+  ]);
+  return formatted
+};
+
+// Date Formaters
+// --------------
+
+/**
+ * Converts hours to milliseconds
+ *
+ * @param {Number} value - The time in hours.
+ * @returns {}
+ */
+
+var toMilliseconds = function (value) {
+  if (Number.isInteger(value)) { return value }
+
+  var parsedValue = value.replace('hs', '').split(':');
+  var hours = +(parsedValue[0] || 0) * 3600000;
+  var minutes = (parsedValue[1] || '').length < 2
+    ? +(((parsedValue[1] || 0) + "0")) * 60000
+    : +(parsedValue[1] || 0) * 60000;
+
+  return hours + minutes
+};
+
+/**
+ * Converts milliseconds to hours
+ *
+ * @param {Number} ms - The time in miliseconds.
+ * @returns {String} - The formmated time in `${hours}:${minutes}`.
+ */
+var toHours = function (ms) {
+  var hours = Math.floor(ms / 3600000);
+  var minutes = Math.floor((ms % 3600000) / 3600000 * 60);
+
+  return (hours + ":" + (minutes || '00'))
+};
+
+
+/**
+ * Formata para o formato de dias.
+ *
+ * @example ```
+ * (2) => '2 dias'
+ * (1) => '1 dia'
+ * (0) => '0 dias'
+ * ```
+ *
+ * @param {Number} quantity
+ * @returns {String}
+ */
+
+var toDays = function (quantity) {
+  var isValid = is(quantity, 'Number') && Number.isFinite(quantity);
+  var days = (quantity === 1) ? '1 dia' : ((isValid ? ~~(quantity) : 0) + " dias");
+  return days
+};
+
+
+/**
+ * Obtém a quantidade de anos a partir da data.
+ *
+ * @example ```
+ * ('21-12-2006') => 10
+ * ('2000-12-21') => 16
+ * ('Abacaxi') => null
+ * ```
+ *
+ * @param {String} date
+ * @returns {Number}
+ */
+
+var toYears = function (date) {
+  var format = getDateFormat(date);
+  var from = format ? dayjs(date, { format: format }) : null;
+  var diff = from ? dayjs().diff(from, 'years') : null;
+  var years = is(diff, 'Number') && !isNaN(diff) ? diff : null;
+
+  return years
+};
+
+
+/**
+ * Formata uma data 'YYYY-MM-DD' ou 'DD-MM-YYYY' em 'DD/MM/YYYY'. Transforma
+ * a data em 'YYYY-MM-DD' caso o segundo parâmetro seja "true".
+ *
+ * @example ```
+ * ('21-12-2006') => '21/12/2006'
+ * ('2006-12-21') => '21/12/2006'
+ * ('21/12/2006') => '21/12/2006'
+ * ('21/12/2006', true) => '2006-12-21'
+ * ('2006-12-21', true) => '2006-12-21'
+ * ('2006/12/21') => null
+ * ```
+ *
+ * @param {String} date
+ * @param {{ from: String, to: String, UTC: Boolean }} [options]
+ * @returns {String}
+ */
+
+var toDate = function (date, ref) {
+  if ( ref === void 0 ) ref = {};
+  var to = ref.to; if ( to === void 0 ) to = 'DD/MM/YYYY';
+  var from = ref.from; if ( from === void 0 ) from = getDateFormat(date);
+  var isUTC = ref.UTC; if ( isUTC === void 0 ) isUTC = false;
+
+  var isValid = isDate(date, from);
+  if (!isValid) { return null }
+
+  var formatted = isUTC
+    ? dayjs(date, (from ? { format: from } : {})).utc()
+    : dayjs(date, (from ? { format: from } : {}));
+
+  // const formatted = dayjs(date, { format: from, utc: isUTC })
+
+  return formatted.format(to)
+};
+
+
 var format = Object.freeze({
 	toCPF: toCPF,
 	toRG: toRG,
-	toMoney: toMoney,
-	toYears: toYears,
-	toDays: toDays,
-	toDate: toDate,
 	toInterval: toInterval,
 	toEmpty: toEmpty,
 	toPhone: toPhone,
 	toClean: toClean,
 	toSlug: toSlug,
-	toCEP: toCEP
+	toCEP: toCEP,
+	toMoney: toMoney,
+	toMilliseconds: toMilliseconds,
+	toHours: toHours,
+	toDays: toDays,
+	toYears: toYears,
+	toDate: toDate
 });
 
 /**
@@ -739,48 +952,13 @@ var Shadowed = function (refName) {
 
 
 
-var mixin = Object.freeze({
+var index$2 = Object.freeze({
 	Alignable: Alignable,
 	Loadable: Loadable,
 	MediaQuery: MediaQuery,
 	ObservableFix: ObservableFix,
 	Shadowed: Shadowed
 });
-
-/**
- * Integra automaticamente as funções de validação ao vee-validade.
- * @param {vee-validate.Validator} Validator
- * @param {Object.<String, { name: String, getMessage: Function }>} options
- */
-var VeeValidateIntegration = function (Validator, options) {
-  var defaultOptions = {
-    isCPF: {
-      name: 'cpf',
-      getMessage: function () { return 'CPF inválido.'; }
-    },
-    isCNPJ: {
-      name: 'cnpj',
-      getMessage: function () { return 'CNPJ inválido.'; }
-    },
-    isDate: {
-      name: 'date',
-      getMessage: function () { return 'Data inválida.'; }
-    }
-  };
-
-  var rules = Object.assign({}, defaultOptions, options);
-
-  Object.keys(rules)
-    .map(function (key) { return Object.assign({}, rules[key], { validate: validate[key] }); })
-    .filter(function (rule) { return is(rules, 'Object'); })
-    .forEach(function (rule) { return Validator.extend(rule.name, rule); });
-
-  return true
-};
-
-var integrations = {
-  'vee-validate': VeeValidateIntegration
-};
 
 /**
  * Opções do plugin.
@@ -796,7 +974,8 @@ var integrations = {
  * @param {Vue} Vue
  * @param {Options} options
  */
-var install = function (Vue, options) {
+
+var index = function (Vue, options) {
   if ( options === void 0 ) options = {};
 
   if (options.formatters) {
@@ -815,34 +994,8 @@ var install = function (Vue, options) {
   }
 };
 
-/**
- * Integra-se a lib definida usando o object/função de integração e as opções da
- * integração.
- * @example ```
- * import { Validator } from 'vee-validate'
- * import Util from 'vue-convenia-util'
- *
- * Util.integrate('vee-validate', Validator)
- * ```
- * @param {String} lib
- * @param {(Object|Function)} integrator
- * @param {Object} options
- * @returns {Boolean}
- */
-var integrate = function (lib, integrator, options) {
-  if ( options === void 0 ) options = {};
-
-  var integration = integrations.hasOwnProperty(lib) ? integrations[lib] : null;
-  var success = integration ? integration(integrator, options) : false;
-  return success
-};
-
-var index = {
-  install: install,
-  integrate: integrate,
-  validate: validate,
-  format: format,
-  mixin: mixin
-};
-
 exports['default'] = index;
+exports.validate = validate;
+exports.format = format;
+exports.mixin = index$2;
+exports.helpers = index$1;
