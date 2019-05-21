@@ -1,9 +1,7 @@
-import * as format from './formatters'
-import * as validate from './validators'
-import * as mixin from './mixins'
-import integrations from './integrations'
-
-export { format, validate, mixin }
+import * as format from './helpers/formatters'
+import * as validate from './helpers/validators'
+import * as helpers from './helpers/index'
+import * as mixin from './mixins/index'
 
 /**
  * Opções do plugin.
@@ -19,7 +17,8 @@ export { format, validate, mixin }
  * @param {Vue} Vue
  * @param {Options} options
  */
-const install = (Vue, options = {}) => {
+
+export default (Vue, options = {}) => {
   if (options.formatters) {
     Vue.prototype.$format = format
   }
@@ -36,30 +35,9 @@ const install = (Vue, options = {}) => {
   }
 }
 
-/**
- * Integra-se a lib definida usando o object/função de integração e as opções da
- * integração.
- * @example ```
- * import { Validator } from 'vee-validate'
- * import Util from 'vue-convenia-util'
- *
- * Util.integrate('vee-validate', Validator)
- * ```
- * @param {String} lib
- * @param {(Object|Function)} integrator
- * @param {Object} options
- * @returns {Boolean}
- */
-const integrate = (lib, integrator, options = {}) => {
-  const integration = integrations.hasOwnProperty(lib) ? integrations[lib] : null
-  const success = integration ? integration(integrator, options) : false
-  return success
-}
-
-export default {
-  install,
-  integrate,
+export {
   validate,
   format,
-  mixin
+  mixin,
+  helpers
 }
